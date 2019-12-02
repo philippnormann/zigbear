@@ -3,40 +3,83 @@
 #include "hif.h"
 #include "radio.h"
 
+const uint8_t channel = 15;
+const uint8_t buffer_size = 255;
 
-int main(void)
-{
+char read_byte() {
+  char inchar;
+  do {
+    inchar = hif_getc();
+  } while (inchar == EOF);
+  return inchar;
+}
 
-#define FRAME_SIZE (49)
-char packet[FRAME_SIZE] = "\x41\x88\x3b\x98\xad\xff\xff\x00\x00\x48\x02\xfd\xff\x89\xd9\x0b"  // 16 bytes
-                          "\x4d\x28\x64\x55\x00\x00\x90\x0b\x04\xff\xff\x2e\x21\x00\x00\x4a"  // 32 bytes
-                          "\xfd\x72\xc4\x10\xdd\xdf\x86\xab\x37\x95\x79\xa8\xa2\xfd\xa8\x0b"  // 48 bytes
-                          "\x8c";                                                             // 49 bytes
+void read_bytes(uint8_t len, char * buf) {
+  for (uint8_t i = 0; i < len; i++) {
+    buf[i] = read_byte();
+  }
+}
 
-char *plim;
+void write_bytes(uint8_t len, char * buf) {
+  for (uint8_t i = 0; i < len; i++) {
+    PRINTF("%c", buf[i]);
+  }
+  PRINT("\n\r");
+}
 
-    mcu_init();
+void send_packet(uint8_t len, char * frame) {
+  LED_TOGGLE(0);
+  radio_set_state(STATE_TX);
+  radio_send_frame(len, frame, 0);
+  LED_TOGGLE(0);
+}
 
-    /* Prerequisite: Init radio */
-    LED_INIT();
-    radio_init(NULL, 0);
-    MCU_IRQ_ENABLE();
-    radio_set_param(RP_CHANNEL(15));
-    radio_set_state(STATE_TX);
+void init() {
+  LED_INIT();
+  hif_init(HIF_DEFAULT_BAUDRATE);
+  radio_init(NULL, 0);
+  sei();
+  radio_set_param(RP_CHANNEL(channel));
+  radio_set_state(STATE_TX);
+}
 
-    plim = packet;
+int main(void) {
+  uint8_t packet_length;
+  char input_buffer[buffer_size];
 
-    PRINTF("sender:%s\n\r", BOARD_NAME);
+  init();
+  read_byte();
 
-    while(1)
-    {
-        /* finalize the buffer and transmit it */
-        radio_set_state(STATE_TX);
-        radio_send_frame(FRAME_SIZE, plim, 0);
-
-        PRINT("sending frame...\n\r");
-        /* wait after this run */
-        LED_TOGGLE(0);
-        DELAY_MS(500);
+  while (1) {
+    PRINT("enter packet length\n\r");
+    packet_length = (uint8_t) read_byte();
+    if (packet_length > buffer_size) {
+      PRINTF("error: packet length %d > max length %d\n\r", packet_length, buffer_size);
+    } else {
+      PRINTF("reading %d bytes\n\r", packet_length);
+      read_bytes(packet_length, input_buffer);
+      PRINTF("transmitting\n\r", input_buffer);
+      PRINT("frame: ");
+      write_bytes(packet_length, input_buffer);
+      send_packet(packet_length, input_buffer);
+      DELAY_MS(100);
     }
+  }
+}
+
+void usr_radio_tx_done(radio_tx_done_t status) {
+  switch (status) {
+  case TX_OK:
+    PRINT("transmission status: TX_OK\n\r");
+    break;
+  case TX_CCA_FAIL:
+    PRINT("transmission status: TX_CCA_FAIL\n\r");
+    break;
+  case TX_NO_ACK:
+    PRINT("transmission status: TX_NO_ACK\n\r");;
+    break;
+  case TX_FAIL:
+    PRINT("transmission status: TX_FAIL\n\r");
+    break;
+  }
 }
