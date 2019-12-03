@@ -24,3 +24,4 @@ while True:
         if decrypted[0] == 0x05:
             print("Transport key detected")
             print(["0x{:02x}".format(x) for x in decrypted[2:18]])
+
