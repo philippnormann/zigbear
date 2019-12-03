@@ -8,5 +8,5 @@ do
   name=$(basename "$f" | cut -f 1 -d '.')
   echo "Converting $name.hex to $name.bin"
   avr-objcopy -I ihex -O binary "$name.hex" "$name.bin"
-  cp "$name.bin" ~/out
+  cp "$name.bin" /tmp/out
 done
