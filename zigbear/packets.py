@@ -1,6 +1,6 @@
 import struct
-from scapy.layers.dot15d4 import *
-from scapy.layers.zigbee import *
+from scapy.layers.dot15d4 import Dot15d4Data, Dot15d4Cmd, Dot15d4FCS, Dot15d4Beacon
+from scapy.layers.zigbee import ZigbeeNWK, ZigbeeSecurityHeader, ZigBeeBeacon, ZigbeeAppDataPayload, ZigbeeClusterLibrary
 
 def address(addr):
     if isinstance(addr, bytes):
