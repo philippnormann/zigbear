@@ -7,7 +7,7 @@ const uint8_t channel = 15;
 const uint8_t buffer_size = 255;
 
 char read_byte() {
-  char inchar;
+  int inchar;
   do {
     inchar = hif_getc();
   } while (inchar == EOF);
@@ -45,7 +45,7 @@ void init() {
 
 int main(void) {
   uint8_t packet_length;
-  char input_buffer[buffer_size];
+  char input_buffer[buffer_size + 2];
 
   init();
   read_byte();
@@ -58,11 +58,8 @@ int main(void) {
     } else {
       PRINTF("reading %d bytes\n\r", packet_length);
       read_bytes(packet_length, input_buffer);
-      PRINTF("transmitting\n\r", input_buffer);
-      PRINT("frame: ");
-      write_bytes(packet_length, input_buffer);
-      send_packet(packet_length, input_buffer);
-      DELAY_MS(100);
+      PRINTF("transmitting %d bytes\n\r", packet_length);
+      send_packet(packet_length + 2, input_buffer);
     }
   }
 }
