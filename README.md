@@ -2,23 +2,23 @@
 
 Looking for some delicous ZigBee honey 🐝
 
-## How to compile?
-Use `Dockerfile` including the AVR-Toolchain, required for compiling the µracoli firmware and our own programs.
-1. Build docker image using
-    
-    `docker build . -t uracoli`
+## How to flash on RaspBee?
 
-2. Run docker image with a volume (located at `./out`) for persisting compiled results
+On the host, `Docker` is required for compilation of µracoli.
 
-    `docker run -v $(pwd)/out:/home/uracoli/work/ -it uracoli`
+On the RaspberryPi, `GCFFlasher_internal` is required.
 
-3. Compile your firmware and copy resulting binary to `/home/uracoli/work/out`
+*Note*: The SSH target for the RaspBee can be configure in the `Makefile`. 
 
-## How to flash?
-1. Copy your firmware to the RaspberryPi using `scp`
+```bash
+make remote-install-firmware
+```
 
-2. `ssh` into RaspberyPi and run `GCFlasher_internal -f firmware.bin`
+## How to run on RaspberryPi?
 
-## How to run?
+Requires `python3` and `pipenv` on the RaspberryPi.
 
-???
+```bash
+make remote-install-python
+make remote-run
+```
