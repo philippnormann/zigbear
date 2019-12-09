@@ -25,8 +25,7 @@ else
     exit 1
 fi
 
-
 docker build "$SCRIPT_DIR" -t uracoli-build
-docker run -v "${OUT}:/home/uracoli/out" -it uracoli-build
+docker run -v "${OUT}:/tmp/out" -it uracoli-build
 scp "$OUT/${APP}_raspbee.bin" "${RASPBEE}:/tmp/"
 ssh "${RASPBEE}" sudo GCFFlasher_internal -f "/tmp/${APP}_raspbee.bin"
