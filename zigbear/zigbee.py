@@ -22,25 +22,23 @@ def bump_counters(packet, transport_key, min_fc=0, turn_on=False):
     assert valid, 'Decryption failed!'
 
     aps = ZigbeeAppDataPayloadStub(decrypted)
-    enc_pkt.data = ""
-    enc_pkt.mic = ""
     unencrypted_frame_part = enc_pkt
+    unencrypted_frame_part.data = ""
+    unencrypted_frame_part.mic = ""
     raw_aps = bytearray(aps.load)
 
-    # bump all the counters
-
-    # 802.15.4
+    # bump 802.15.4 sequene number
     unencrypted_frame_part[Dot15d4FCS].seqnum = (
         unencrypted_frame_part[Dot15d4FCS].seqnum + 1) % 255
-    # Zigbee NWK
+    # bump Zigbee NWK sequene number
     unencrypted_frame_part[ZigbeeNWK].seqnum = (
         unencrypted_frame_part[ZigbeeNWK].seqnum + 1) % 255
-    # Zigbee Security header
+    # bump Zigbee Security header frame counter
     unencrypted_frame_part[ZigbeeSecurityHeader].fc = max(
         min_fc, unencrypted_frame_part[ZigbeeSecurityHeader].fc) + 1
-    # Zigbee APS counter
+    # bump Zigbee APS counter
     raw_aps[1] = (raw_aps[1] + 1) % 255
-    # ZCL sequence number
+    # bump ZCL sequence number
     raw_aps[3] = (raw_aps[3] + 1) % 255
 
     if turn_on:
