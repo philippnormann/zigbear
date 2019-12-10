@@ -26,6 +26,7 @@ build-python:
 	pipenv run python setup.py bdist_wheel
 
 remote-install-python: dist/*.whl
+	make build-python
 	scp $^ ${RASPBEE}:/tmp/$(notdir $^)
 	ssh ${RASPBEE} 'pip3 install --upgrade /tmp/$(notdir $^)'
 
@@ -34,6 +35,8 @@ remote-install:
 	make remote-install-python
 
 remote-run:
-	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && sleep 1 && python3 -m zigbear'"
+	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && python3 -m zigbear'"
 
-
+remote-run-dev:
+	scp -r zigbear ${RASPBEE}:/tmp/ 
+	ssh pi@sniffer.local -t "bash -c 'sudo GCFFlasher_internal -r && python3 /tmp/zigbear/main.py'"
