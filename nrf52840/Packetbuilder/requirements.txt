@@ -1,0 +1,4 @@
+parse
+scapy
+pyserial
+pycryptodome
