@@ -38,5 +38,5 @@ remote-run:
 	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && python3 -m zigbear'"
 
 remote-run-dev:
-	scp -r zigbear ${RASPBEE}:/tmp/ 
-	ssh pi@sniffer.local -t "bash -c 'sudo GCFFlasher_internal -r && python3 /tmp/zigbear/main.py'"
+	rsync --rsh ssh --recursive --progress --human-readable zigbear ${RASPBEE}:/tmp/
+	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && cd /tmp && python3 -m zigbear'"
