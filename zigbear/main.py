@@ -27,21 +27,31 @@ def main():
     ser.write(b'\n')
 
     while True:
-        input("Enter to toggle lamp: ")
+        length = ser.read()
+        if length != b'':
+            length = int(length[0])
+            package = ser.read(length)
+            if length >= 9:
+                print('Package length: {}'.format(int(package[0])))
+                print('Package time: {}'.format(package[1:9]))
+                print('Package content: {}'.format(package[9:]))
+                ser.write(length)
+                ser.write(package[:length])
+        # input("Enter to toggle lamp: ")
 
-        frame = encrypted_toggle(panid, source, destination, extended_source,
-                                 TRANSPOT_KEY, frame_counter=frame_counter,
-                                 seq_num=seq_num, nwk_seq_num=nwk_seq_num,
-                                 aps_counter=aps_counter, zcl_seq_num=zcl_seq_num).build()
+        # frame = encrypted_toggle(panid, source, destination, extended_source,
+        #                          TRANSPOT_KEY, frame_counter=frame_counter,
+        #                          seq_num=seq_num, nwk_seq_num=nwk_seq_num,
+        #                          aps_counter=aps_counter, zcl_seq_num=zcl_seq_num).build()
 
-        send_packet(ser, frame[:-2])
-        print(f'Frame counter: {frame_counter}')
+        # send_packet(ser, frame[:-2])
+        # print(f'Frame counter: {frame_counter}')
 
-        frame_counter += 1
-        seq_num = (seq_num + 1) % 256
-        nwk_seq_num = (nwk_seq_num + 1) % 256
-        aps_counter = (aps_counter + 1) % 256
-        zcl_seq_num = (zcl_seq_num + 1) % 256
+        # frame_counter += 1
+        # seq_num = (seq_num + 1) % 256
+        # nwk_seq_num = (nwk_seq_num + 1) % 256
+        # aps_counter = (aps_counter + 1) % 256
+        # zcl_seq_num = (zcl_seq_num + 1) % 256
 
 if __name__ == "__main__":
     main()
