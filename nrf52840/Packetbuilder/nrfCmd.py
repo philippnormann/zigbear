@@ -21,12 +21,19 @@ class nrfCmd(Cmd):
         '''channel: shows channel\nchannel <channel>: sets channel'''
         if inp:
             self.nrfConnector.setChannel(inp)
+            self.channel = int(inp)
         else:
-            self.nrfConnector.getChannel()
+            print(self.channel)
     
     def do_start(self, _):
-        '''start: starts the barrage of packets (!currently no way to stop!)'''
+        '''start: starts sending packets to udp port 5555'''
         self.nrfConnector.start()
+        print("Sniffing on channel {}".format(self.channel))
+    
+    def do_stop(self, _):
+        '''stop: stops sending packets to udp port 5555'''
+        self.nrfConnector.stop()
+        print("Stopped sniffing")
     
     def do_send(self, inp):
         '''send <hexStr>: send the hexStr'''

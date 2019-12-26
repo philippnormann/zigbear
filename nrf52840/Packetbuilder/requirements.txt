@@ -2,3 +2,4 @@ parse
 scapy
 pyserial
 pycryptodome
+pycrc
