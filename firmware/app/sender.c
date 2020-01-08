@@ -2,146 +2,147 @@
 #include "board.h"
 #include "hif.h"
 #include "radio.h"
-#include "transceiver.h"
 #include "timer.h"
 
-const uint8_t channel = 15;
-const uint8_t buffer_size = 255;
-# define MAX_RECEIVE_BUFFER_ZSIZE (8)
+#define MAX_BUFFER_SIZE (127)
+#define MAX_RECEIVE_BUFFERS (32)
+#define WAIT_AFTER_DUMP (MSEC(50))
 
-typedef struct pcap_packet_tag {
+typedef struct pcap
+{
   uint8_t len;
-  time_stamp_t ts;
-  uint8_t frame[MAX_FRAME_SIZE];
-} pcap_packet_t;
+  uint8_t frame[MAX_BUFFER_SIZE];
+} pcap;
 
-typedef struct pcap_pool_tag {
+typedef struct pcap_pool
+{
   volatile uint8_t ridx;
   volatile uint8_t widx;
-  pcap_packet_t packet[MAX_RECEIVE_BUFFER_ZSIZE];
-} pcap_pool_t;
+  pcap pcaps[MAX_RECEIVE_BUFFERS];
+} pcap_pool;
 
-pcap_pool_t PcapPool;
+pcap_pool PcapPool;
 uint8_t sending = 0;
+time_t last_frame_dump = 0;
 
-int try_read_byte() {
-  return hif_getc();
+void write_bytes(uint8_t *buf, uint8_t len)
+{
+  uint8_t tmp;
+  do
+  {
+    tmp = hif_put_blk(buf, len);
+    buf += tmp;
+    len -= tmp;
+  } while (len > 0);
 }
 
-char read_byte() {
-  int inchar;
-  do {
-    inchar = try_read_byte();
-  } while (inchar == EOF);
-  return inchar;
+void wait_for_input(char input)
+{
+  char inchar;
+  do
+  {
+    inchar = hif_getc();
+  } while (inchar != input);
 }
 
-void read_bytes(uint8_t len, char * buf) {
-  for (uint8_t i = 0; i < len; i++) {
-    buf[i] = read_byte();
-  }
-}
-
-void write_bytes(uint8_t len, char * buf) {
-  for (uint8_t i = 0; i < len; i++) {
-    PRINTF("%c", buf[i]);
-  }
-  PRINT("\n\r");
-}
-
-void send_packet(uint8_t len, char * frame) {
-  if (sending != 0xFF) {
+void send_packet(uint8_t len, char *frame)
+{
+  if (sending < 0xFF)
+  {
     LED_TOGGLE(0);
     sending += 1;
-    radio_set_state(STATE_TX);
+    radio_set_state(STATE_TXAUTO);
     radio_send_frame(len, frame, 0);
     LED_TOGGLE(0);
   }
 }
 
-void init() {
+void init(uint8_t *rxbuf, uint8_t rxbufsz, uint8_t channel)
+{
   LED_INIT();
   timer_init();
   hif_init(HIF_DEFAULT_BAUDRATE);
-  radio_init(NULL, 0);
+  radio_init(rxbuf, rxbufsz);
   sei();
   radio_set_param(RP_CHANNEL(channel));
   radio_set_state(STATE_RX);
 
   PcapPool.ridx = 0;
   PcapPool.widx = 0;
+
+  // sync with serial client
+  wait_for_input('\n');
+  hif_putc('\n');
 }
 
-int main(void) {
-  int length;
-  uint8_t packet_length;
-  char input_buffer[buffer_size + 2];
-  uint8_t display = 0;
+void dump_recieved_frame()
+{
+  pcap *recieved = &PcapPool.pcaps[PcapPool.ridx];
+  uint8_t len = recieved->len;
+  uint8_t *frame = recieved->frame;
 
-  init();
-  read_byte();
+  // send lenght + frame to client
+  hif_putc(len);
+  write_bytes(frame, len);
 
-  while(1) {
-    length = try_read_byte();
-    if (length != EOF && length != 0) {
-      packet_length = (uint8_t) length;
-      read_bytes(packet_length, input_buffer);
-      send_packet(packet_length + 2, input_buffer);
-    }
-    if (sending == 0) {
-      radio_set_state(STATE_RX);
-    }
+  // mark buffer as processed
+  recieved->len = 0;
+  PcapPool.ridx = (PcapPool.ridx + 1) % MAX_RECEIVE_BUFFERS;
+}
 
-    if (PcapPool.widx != PcapPool.ridx) {
-      uint8_t tmp, len, *p;
-      pcap_packet_t *ppcap = &PcapPool.packet[PcapPool.ridx];
-      len = ppcap->len+1;
-      hif_putc(len);
-      p = (uint8_t*)ppcap;
-      do {
-        tmp = hif_put_blk(p, len);
-        p += tmp;
-        len -= tmp;
-      } while(len>0);
-      /* mark buffer as processed */
-      ppcap->len = 0;
-      PcapPool.ridx++;
-      PcapPool.ridx &= (MAX_RECEIVE_BUFFER_ZSIZE-1);
+int main(void)
+{
+  uint8_t channel = 25;
+  uint8_t rxbuf[MAX_BUFFER_SIZE];
+  time_t now = timer_systime();
+
+  init(rxbuf, MAX_BUFFER_SIZE, channel);
+
+  while (true)
+  {
+    now = timer_systime();
+    if (PcapPool.widx != PcapPool.ridx && now - last_frame_dump > WAIT_AFTER_DUMP)
+    {
+      dump_recieved_frame();
+      last_frame_dump = now;
+    } else {
+      // TODO: handle commands and send stuff
     }
   }
 }
 
-void usr_radio_tx_done(radio_tx_done_t status) {
-  switch (status) {
+void usr_radio_tx_done(radio_tx_done_t status)
+{
+  switch (status)
+  {
   case TX_OK:
+    PRINT("TX_DONE: OK\n\r");
     break;
   case TX_CCA_FAIL:
-    PRINT("transmission status: TX_CCA_FAIL\n\r");
+    PRINT("TX_DONE: CCA_FAIL\n\r");
     break;
   case TX_NO_ACK:
-    PRINT("transmission status: TX_NO_ACK\n\r");;
+    PRINT("TX_DONE: NO_ACK\n\r");
+    ;
     break;
   case TX_FAIL:
-    PRINT("transmission status: TX_FAIL\n\r");
+    PRINT("TX_DONE: TX_FAIL\n\r");
     break;
   }
   sending -= 1;
 }
 
-pcap_packet_t *ppcap_trx24 = NULL;
+uint8_t *usr_radio_receive_frame(uint8_t len, uint8_t *frm, uint8_t lqi, int8_t ed, uint8_t crc_fail)
+{
+  pcap *target_pcap = &PcapPool.pcaps[PcapPool.widx];
+  uint8_t new_widx = (PcapPool.widx + 1) % MAX_RECEIVE_BUFFERS;
 
-uint8_t * usr_radio_receive_frame(uint8_t len, uint8_t *frm, uint8_t lqi, int8_t ed, uint8_t crc_fail) {
-  extern time_t systime;
-
-  ppcap_trx24 = &PcapPool.packet[PcapPool.widx];
-
-  if (ppcap_trx24->len == 0 && len <= MAX_FRAME_SIZE) {
-    ppcap_trx24->ts.hw_ticks = TRX_TSTAMP_REG;
-    ppcap_trx24->ts.sys_ticks = systime;
-    memcpy(ppcap_trx24->frame, frm, len);
-    ppcap_trx24->len = len + sizeof(time_stamp_t);
-
-    PcapPool.widx++;
-    PcapPool.widx &= (MAX_RECEIVE_BUFFER_ZSIZE-1);
+  if (!crc_fail && len > 0 && len <= MAX_BUFFER_SIZE && target_pcap->len == 0 && new_widx != PcapPool.ridx)
+  {
+    memcpy(target_pcap->frame, frm, len);
+    target_pcap->len = len;
+    PcapPool.widx = new_widx;
   }
+
+  return frm;
 }
