@@ -39,3 +39,5 @@ pip-delete-this-directory.txt
  
 # vscode
 .vscode
+.idea
+venv

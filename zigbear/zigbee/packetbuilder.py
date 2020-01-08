@@ -1,9 +1,11 @@
 from scapy.layers.zigbee import *
 from scapy.layers.dot15d4 import *
-from Packetbuilder.scapy_adjustments import *
-from Packetbuilder.crypto import *
 
 #Encrypt the APS with CCM
+from zigbear.zigbee.crypto import zigbee_packet_encrypt
+from zigbear.zigbee.scapy_adjustments import ZigbeeAppDataPayload2, ZigbeeSecurityHeader2
+
+
 def ccm_encrypt_APS(frame_counter, extended_source, sec_ctr, key, ZAPS_Frame):
     #TODO actual CCM encryption using src_address + frame_counter + sec_ctr
     return ZAPS_Frame.build()

@@ -1,8 +1,4 @@
-import sys
-import time
 import serial
-from zigbear.radio.raspbee import send_packet
-from zigbear.packets import encrypted_toggle
 
 SERIAL_PORT = '/dev/ttyS0'
 BAUD_RATE = 38400

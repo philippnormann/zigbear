@@ -1,10 +1,9 @@
-import struct
 from scapy.config import conf
 from scapy.layers.dot15d4 import Dot15d4Data, Dot15d4FCS
-from zigbear.patch.zigbee import ZigbeeAppDataPayload, ZigbeeAppDataPayloadStub, ZigbeeNWK, ZigbeeNWKStub, ZigbeeSecurityHeader, ZigbeeClusterLibrary, ZigbeeZLLCommissioningCluster, ZLLIdentifyRequest
+from zigbear.old.patch import ZigbeeAppDataPayload, ZigbeeNWK, ZigbeeSecurityHeader, ZigbeeClusterLibrary
 
-from zigbear.crypto import zigbee_packet_decrypt, zigbee_packet_encrypt
-from zigbear.utils import pan, address, extended_address, extended_address_bytes, get_extended_source
+from zigbear.old.crypto import zigbee_packet_encrypt
+from zigbear.old.utils import pan, address, extended_address, extended_address_bytes
 
 conf.dot15d4_protocol = "zigbee"
 

@@ -1,36 +1,26 @@
 import threading
-from PyCRC.CRC16Kermit import CRC16Kermit
 from parse import *
 import serial
-import socket
 
-class NrfConnector:
-    def __init__(self, comPort):
-        self.port = comPort
+from zigbear.radio.connector import Connector
+
+
+class NrfConnector(Connector):
+    def __init__(self, com_port):
+        super().__init__()
+        self.port = com_port
         self.baud = 115200
         self.timeout = 1
         self.ser = serial.Serial(self.port, baudrate=self.baud, timeout=self.timeout)
-        self.wiresharkAddr = ("127.0.0.1", 5555)
-        self.wiresharkSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def _send(self, data):
+    def __send(self, data):
         self.ser.write(data.encode())
 
-    def sendPacket(self, data):
-        self.wiresharkSock.sendto(bytearray.fromhex(data + "0000"), self.wiresharkAddr)
-        self._send("send {}\n".format(data))
+    def _send(self, data):
+        self.__send("send {}\n".format(data))
 
-    def getChannel(self):
-        self._send("channel\n")
-        pass
-
-    def setChannel(self, channel):
-        self._send("channel {}\n".format(channel))
-        pass
-
-    def get_CRC(self, package):
-        packageBytes = bytes.fromhex(package)
-        return hex(CRC16Kermit().calculate(packageBytes))[2:].zfill(4)
+    def _set_channel(self, channel):
+        self.__send("channel {}\n".format(channel))
 
     def handle_data(self, data):
         receiveParsed = parse("received: power: {} lqi: {} data: {}", data)
@@ -38,11 +28,10 @@ class NrfConnector:
             power = receiveParsed[0]
             lqi = receiveParsed[1]
             package = receiveParsed[2]
-            #print(package)
-            packageArray = bytearray.fromhex(package)
-            self.wiresharkSock.sendto(bytearray.fromhex(package + self.get_CRC(package)), self.wiresharkAddr)
+            self.receive(package)
         else:
-            print("serial error: cannot parse {}".format(data))
+            pass
+            #print("serial error: cannot parse {}".format(data))
 
     def read_from_port(self):
         buffer = ''
@@ -55,13 +44,13 @@ class NrfConnector:
                     self.handle_data(line.strip())
                 buffer = lines[-1]
 
-    def start(self):
+    def _start(self):
         if (not hasattr(self, 'thread')) or (not self.thread.isAlive()):
             self.thread = threading.Thread(target=self.read_from_port, args=(), daemon=True)
             self.thread.start()
         else:
             print("Sniffer is already running")
 
-    def stop(self):
+    def _close(self):
         self.thread.continue_sniffing = False
         self.thread.join()

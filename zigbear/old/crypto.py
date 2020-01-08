@@ -1,9 +1,6 @@
 from Cryptodome.Cipher import AES
-from Cryptodome.Util import Counter
-import struct
 
 from scapy.layers.dot15d4 import *
-from zigbear.patch.zigbee import *
 import struct
 
 conf.dot15d4_protocol = 'zigbee'
