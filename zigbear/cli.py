@@ -1,5 +1,6 @@
 from cmd import Cmd
 
+from zigbear.custom_protocol.devicecli import DeviceCli
 from zigbear.radio.cc2531connector import CC2531Connector
 from zigbear.radio.mockconnector import MockConnector
 from zigbear.radio.nrfconnector import NrfConnector
@@ -24,6 +25,12 @@ class ZigbearCli(Cmd):
     def do_zigbee(self, arg):
         if self.connector:
             ZigbeeCli(self.connector).cmdloop()
+        else:
+            print("please specify a radio connector")
+
+    def do_device(self, arg):
+        if self.connector:
+            DeviceCli(self.connector).cmdloop()
         else:
             print("please specify a radio connector")
 
