@@ -1,6 +1,8 @@
+import math
 import threading
 from parse import *
 import serial
+import time
 
 from zigbear.radio.connector import Connector
 
@@ -14,7 +16,11 @@ class NrfConnector(Connector):
         self.ser = serial.Serial(self.port, baudrate=self.baud, timeout=self.timeout)
 
     def __send(self, data):
-        self.ser.write(data.encode())
+        c = math.ceil(len(data) / 80)
+        for i in range(c):
+            self.ser.write(data[i * 80:(i * 80) + 80].encode())
+            self.ser.flush()
+            time.sleep(0.01)
 
     def _send(self, data):
         self.__send("send {}\n".format(data))

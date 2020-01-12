@@ -2,13 +2,17 @@ from scapy.layers.dot15d4 import Dot15d4, Dot15d4Data
 
 
 class MACLayer:
-    def __init__(self, phyConnector, network, address):
+    def __init__(self, connector, network, address):
         self.network = network
         self.address = address
-        self.connector = phyConnector
+        self.connector = connector
         self.sequence = 0
 
+        self.receive_callback = lambda source, data: source
         self.connector.set_receive_callback(self.receive)
+
+    def set_receive_callback(self, callback):
+        self.receive_callback = callback
 
     def new_sequence_number(self):
         s = self.sequence
@@ -26,6 +30,9 @@ class MACLayer:
         self.connector.send((ieee_fc / ieee_data / data).build().hex())
 
     def receive(self, data):
-        ieee_fc = Dot15d4(data)
+        ieee_fc = Dot15d4(bytearray.fromhex(data))
+        ieee_data = ieee_fc.payload
 
-        ieee_data = Dot15d4Data(ieee_fc.payload)
+        if (ieee_data.dest_panid == self.network or ieee_data.dest_panid == 0xffff) \
+                and (ieee_data.dest_addr == self.address or ieee_data.dest_addr == 0xffff):
+            self.receive_callback(ieee_data.src_addr, ieee_data.payload)

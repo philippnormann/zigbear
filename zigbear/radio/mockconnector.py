@@ -6,7 +6,7 @@ class MockConnector(Connector):
         super().__init__()
 
     def _send(self, data):
-        print("send data: {}".format(data))
+        self.receive(data)
 
     def _start(self):
         pass

@@ -4,10 +4,13 @@ from zigbear.custom_protocol.protocol import NetworkHeader
 
 
 class NetworkLayer:
+
     def __init__(self, MACLayer):
         self.MACLayer = MACLayer
         self.packet_id_cache = {}
         self.packet_receive_cache = {}
+
+        self.MACLayer.set_receive_callback(self.receive)
 
     def get_packet_id(self, destination, port):
         if destination not in self.packet_id_cache:
@@ -21,14 +24,13 @@ class NetworkLayer:
         return x
 
     def send(self, destination, port, data):
-        hexdata = data.build()
-        print(hexdata)
-        packetcount = math.ceil(len(hexdata) / 100)
+        rawData = data.build()
+        packetcount = math.ceil(len(rawData) / 100)
 
         packet_id = self.get_packet_id(destination, port)
 
         for i in range(packetcount):
-            d = hexdata[i*100:(i*100)+100]
+            d = rawData[i*100:(i*100)+100]
             h = NetworkHeader(port = port, package_id = packet_id, sequence_number = i)
             h.frame_control.package_start = i == 0
             if i == 0:

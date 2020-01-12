@@ -3,6 +3,7 @@ from cmd import Cmd
 
 class CoordinatorCli(Cmd):
     def __init__(self, connector):
+        self.prompt = 'Zigbear/coordinator> '
         super().__init__()
 
     def do_devices(self, _):
