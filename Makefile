@@ -1,7 +1,7 @@
-RASPBEE=pi@sniffer.local
+RASPBEE=pi@uracoli.local
 
-FIRMWARE_DIR=firmware
-FIRMWARE_APP=sender
+FIRMWARE_DIR=raspbee
+FIRMWARE_APP=zigbear
 FIRMWARE_OUT=${FIRMWARE_DIR}/out
 
 remote-install-firmware:
@@ -39,4 +39,4 @@ remote-run:
 
 remote-run-dev:
 	rsync --rsh ssh --recursive --progress --human-readable zigbear ${RASPBEE}:/tmp/
-	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && cd /tmp && python3 -m zigbear'"
+	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && cd /tmp/zigbear && python3 -m old.main'"

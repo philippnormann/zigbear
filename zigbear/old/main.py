@@ -1,20 +1,21 @@
 import serial
 import socket
+import time
 
 PORT = '/dev/ttyS0'
-BAUD_RATE = 19200
-TIMEOUT = 1
+BAUD_RATE = 38400
+TIMEOUT = 0.1
 
-WIRESHARK_IP = "pop-os.local"
+WIRESHARK_HOST = "GlaDOS.local"
 WIRESHARK_PORT = 5555
 
-TRANSPOT_KEY = b'\x00\x08\xd0$\xb4\xd4\x08\xfc\xb4\xfcd\x08\xa4\xfc\xbc,'
+TRANSPOT_KEY = bytes.fromhex('0000bc24f4942c6c6490f448082cbcbc')
 
 
 def connect_raspbee(port: str, baudrate: int, timeout: float):
     ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
     inchar = ''
-    while inchar != b'\n':    
+    while inchar != b'\n':
         ser.write(b'\n')
         ser.flush()
         inchar = ser.read(size=1)
@@ -29,19 +30,34 @@ def connect_wireshark(ip: str, port: int) -> socket.socket:
 
 def main():
     ser = connect_raspbee(PORT, BAUD_RATE, TIMEOUT)
-    sock = connect_wireshark(WIRESHARK_IP, WIRESHARK_PORT)
+    sock = connect_wireshark(WIRESHARK_HOST, WIRESHARK_PORT)
 
     while True:
-        inchar = ser.read(size=1)
-        if len(inchar) > 0:
-            length = ord(inchar)
-            package = ser.read(size=length)
+        line = ser.readline().decode().strip()
+        args = line.split(':')
+        cmd = args[0]
+        if cmd is 'R':
+            print(args)
+            _, length, lqi, package = args
+            print(f'Recieved frame len: {length}, signal strength: {lqi}')
+            package = bytes.fromhex(package)
+            sock.sendto(package, (WIRESHARK_HOST, WIRESHARK_PORT))
 
-            print(f'Package length: {length}')
-            print(f'Read bytes: {len(package)}')
-            print(f'Package content: {package}')
+        elif cmd is 'T':
+            _, status = args
+            print(f'Transmission status: {status}')
 
-            sock.sendto(package, (WIRESHARK_IP, WIRESHARK_PORT))
+        elif cmd is 'S':
+            _, channel, status = args
+            print(f'Set channel {channel} status: {status}')
+
+        elif cmd is '':
+            # Raspbee is idle and waiting for commands
+            ser.write(f'T:8:03086fffffffff07\n\r'.encode()) # Send beacon request as PoC
+            time.sleep(0.1)
+            pass
+
+        ser.flush()
 
 
 if __name__ == "__main__":
