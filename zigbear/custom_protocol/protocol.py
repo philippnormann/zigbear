@@ -16,14 +16,3 @@ class NetworkHeader(Packet):
         ),
         ShortField("sequence_number", 0)
     ]
-
-
-class SecurityHeader(Packet):
-    name = "Security Layer"
-    fields_desc = [
-        BitEnumField("key_id", 0, 2,
-                     {0: 'no_key', 1: 'network_key', 2: 'private_key', 3: 'public_key'}),
-        FlagsField("frame_control", 0, 6,
-                   ['reserved0', 'reserved1', 'reserved2', 'reserved3', 'reserved4', 'reserved5']),
-        ShortField("frame_checksum", 0)
-    ]

@@ -3,3 +3,4 @@ scapy
 pyserial
 pycryptodome
 pycrc
+cryptography

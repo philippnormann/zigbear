@@ -9,5 +9,5 @@ class DeviceCli(Cmd):
         self.prompt = 'Zigbear/device> '
         self.device = Device(connector)
 
-    def do_test(self, arg):
-        self.device.send(0xffff, "Hallo, dies ist eine kleine Nachricht zum Testes, ob das Spltten von Paketen richtig funktioniert. Deshalb muss diese Nachrichte eine gewisse länge haben.")
+    def do_send(self, arg):
+        self.device.send(1, arg)

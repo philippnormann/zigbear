@@ -1,19 +1,15 @@
 from scapy.packet import Raw
 
-from zigbear.custom_protocol.ApplicationLayer import ApplicationLayer
-from zigbear.custom_protocol.MACLayer import MACLayer
-from zigbear.custom_protocol.NetworkLayer import NetworkLayer
-from zigbear.custom_protocol.SecurityLayer import SecurityLayer
+from zigbear.custom_protocol.stack import ProtocolStack
 
 
 class Device:
     def __init__(self, connector):
-        self.connector = connector
-        self.maclayer = MACLayer(self.connector, 0, 1)
-        self.networklayer = NetworkLayer(self.maclayer)
-        self.securitylayer = SecurityLayer(self.networklayer)
-        self.application = ApplicationLayer(self.securitylayer)
+        self.protocol_stack = ProtocolStack(connector)
 
-    def send(self, destination, data):
-        print("Sending: {}".format(data))
-        self.networklayer.send(destination, 123, Raw(load=data))
+    def send(self, destination, message):
+        session = self.protocol_stack.connect(destination, 100)
+        session.send(Raw(message))
+        answer = session.receive().build()
+        print("Answer: {}".format(answer))
+        session.close()

@@ -6,8 +6,9 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+
 class SecurityLayer:
-    def __init__(self, networkLayer, network_key):
+    def __init__(self, networkLayer, network_key = None):
         self.networkLayer = networkLayer
         self.framecount = 0
         self.key_cache = {}

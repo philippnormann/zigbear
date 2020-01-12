@@ -1,20 +1,21 @@
-from zigbear.custom_protocol.ApplicationLayer import ApplicationLayer
-from zigbear.custom_protocol.MACLayer import MACLayer
-from zigbear.custom_protocol.NetworkLayer import NetworkLayer
-from zigbear.custom_protocol.SecurityLayer import SecurityLayer
+import time
+
+from scapy.packet import Raw
+
+from zigbear.custom_protocol.stack import ProtocolStack
 
 
 class Coordinator:
     def __init__(self, connector):
-        self.connector = connector
-        self.maclayer = MACLayer(self.connector, 0, 1)
-        self.networklayer = NetworkLayer(self.maclayer)
-        self.securitylayer = SecurityLayer(self.networklayer)
-        self.application = ApplicationLayer(self.securitylayer)
+        self.protocol_stack = ProtocolStack(connector)
 
-    def send(self, destination, data):
-        print("Sending: {}".format(data))
+    def start_server(self):
+        def handler(session):
+            data = session.receive()
+            print(data)
+            session.send(Raw("Length: {}".format(len(data))))
+            session.close()
 
-
-
-        self.networklayer.send(data, destination)
+        listener = self.protocol_stack.listen(100, handler)
+        time.sleep(100000)
+        listener.close()

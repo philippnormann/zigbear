@@ -1,5 +1,7 @@
 import math
 
+from scapy.packet import Raw
+
 from zigbear.custom_protocol.protocol import NetworkHeader
 
 
@@ -10,7 +12,11 @@ class NetworkLayer:
         self.packet_id_cache = {}
         self.packet_receive_cache = {}
 
+        self.receive_callback = lambda source, port, data: source
         self.MACLayer.set_receive_callback(self.receive)
+
+    def set_receive_callback(self, callback):
+        self.receive_callback = callback
 
     def get_packet_id(self, destination, port):
         if destination not in self.packet_id_cache:
@@ -62,5 +68,4 @@ class NetworkLayer:
                 for i in range(l):
                     d = d + self.packet_receive_cache[source][h.port][h.package_id][i].build()
                 self.packet_receive_cache[source][h.port].pop(h.package_id)
-                print(d)
-                # TODO send to security layer
+                self.receive_callback(source, h.port, Raw(d))
