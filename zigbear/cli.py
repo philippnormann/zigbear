@@ -55,7 +55,8 @@ class ZigbearCli(Cmd):
         elif arg == "cc2531":
             self.connector = CC2531Connector()
         elif arg == "raspbee":
-            self.connector = RaspbeeConnector()
+            host = input("wireshark host: ")
+            self.connector = RaspbeeConnector(wireshark_host=host)
         elif arg == "mock":
             self.connector = MockConnector()
         else:
