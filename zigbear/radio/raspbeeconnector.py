@@ -27,15 +27,19 @@ class RaspbeeConnector(Connector):
         print('Connection to RaspBee established!')
         return ser
 
+    def _set_channel(self, channel: str):
+        self.ser.write(f'S:{channel.strip()}\n'.encode())
+        self.ser.flush()
+
     def _send(self, data: str):
         # TODO: what if len(data) is not dividable by 2?
         l = math.floor(len(data) / 2)
-        self.ser.write(f'T:{l}:{data}'.encode())
+        self.ser.write(f'T:{l}:{data}\n'.encode())
         self.ser.flush()
 
     def read_from_port(self):
         t = currentThread()
-        while getattr(t, "continue_sniffing", True):
+        while t.listen:
             line = self.ser.readline().decode().strip()
             args = line.split(':')
             cmd = args[0]
@@ -48,7 +52,6 @@ class RaspbeeConnector(Connector):
             elif cmd is 'S':
                 _, channel, status = args
                 print(f'\nSet channel {channel} status: {status}')
-            sys.stdout.flush()
 
     def _start(self):
         if self.thread is None or (not self.thread.isAlive()):
@@ -62,6 +65,3 @@ class RaspbeeConnector(Connector):
         self.thread.listen = False
         self.thread.join()
 
-    def _set_channel(self, channel: str):
-        self.ser.write(f'S:{channel}'.encode())
-        self.ser.flush()
