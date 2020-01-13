@@ -54,7 +54,7 @@ def main():
         elif cmd is '':
             # Raspbee is idle and waiting for commands
             ser.write(f'T:8:03086fffffffff07\n\r'.encode()) # Send beacon request as PoC
-            time.sleep(0.1)
+            time.sleep(10)
             pass
 
         ser.flush()
