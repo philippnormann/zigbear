@@ -4,10 +4,10 @@ from PyCRC.CRC16Kermit import CRC16Kermit
 
 
 class Connector:
-    def __init__(self):
-        self.wiresharkAddr = ("127.0.0.1", 5555)
-        self.wiresharkSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.receiveCallback = lambda arr: arr
+    def __init__(self, wireshark_host="127.0.0.1", wireshark_port=5555):
+        self.wireshark_addr = (wireshark_host, wireshark_port)
+        self.wireshark_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.receive_callback = lambda arr: arr
 
     @abstractmethod
     def _set_channel(self, channel):
@@ -34,7 +34,7 @@ class Connector:
         self._set_channel(channel)
 
     def set_receive_callback(self, callback):
-        self.receiveCallback = callback
+        self.receive_callback = callback
 
     def start(self):
         self._start()
@@ -43,10 +43,10 @@ class Connector:
         self._close()
 
     def receive(self, data):
-        self.wiresharkSock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wiresharkAddr)
-        if self.receiveCallback:
-            self.receiveCallback(data)
+        self.wireshark_sock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wireshark_addr)
+        if self.receive_callback:
+            self.receive_callback(data)
 
     def send(self, data):
-        self.wiresharkSock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wiresharkAddr)
+        self.wireshark_sock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wireshark_addr)
         self._send(data)
