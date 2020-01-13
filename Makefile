@@ -39,4 +39,4 @@ remote-run:
 
 remote-run-dev:
 	rsync --rsh ssh --recursive --progress --human-readable zigbear ${RASPBEE}:/tmp/
-	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && cd /tmp/zigbear && python3 -m old.main'"
+	ssh ${RASPBEE} -t "bash -c 'sudo GCFFlasher_internal -r && cd /tmp && python3 -m zigbear'"
