@@ -1,6 +1,0 @@
-parse
-scapy
-pyserial
-pycryptodome
-pycrc
-cryptography
