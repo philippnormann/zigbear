@@ -1,6 +1,4 @@
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
-import struct
+from Cryptodome.Cipher import AES
 
 from scapy.layers.dot15d4 import *
 from scapy.layers.zigbee import *
