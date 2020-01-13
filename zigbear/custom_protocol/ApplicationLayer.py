@@ -1,4 +1,5 @@
 import threading
+from _queue import Empty
 from multiprocessing import Queue
 
 
@@ -15,7 +16,10 @@ class ApplicationLayer:
             self.application_layer.security_layer.send(self.other, self.port, data)
 
         def receive(self, timeout=30):
-            return self.queue.get(True, timeout)
+            try:
+                return self.queue.get(True, timeout)
+            except Empty:
+                raise TimeoutError()
 
         def close(self):
             self.application_layer.unregister(self)

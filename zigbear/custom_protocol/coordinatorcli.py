@@ -13,7 +13,7 @@ class CoordinatorCli(Cmd):
         pass # TODO print list of devices
 
     def do_info(self, _):
-        pass # TODO print info like keys, ...
+        self.coordinator.print_info()
 
     def do_accept(self, arg):
         self.coordinator.start_server()

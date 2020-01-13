@@ -41,20 +41,14 @@ class ZigbearCli(Cmd):
         else:
             print("please specify a radio connector")
 
-    def do_start(self, _):
-        '''start: starts sending packets to udp port 5555'''
-        self.connector.start()
-
-    def do_stop(self, _):
-        '''stop: stops sending packets to udp port 5555'''
-        self.connector.close()
-
     def do_send(self, inp):
         '''send <hexStr>: send the hexStr'''
         self.connector.send(inp)
 
     def do_connector(self, arg):
         '''connector <type>: sets the connector for radio'''
+        if self.connector is not None:
+            self.connector.close()
         if arg == "nrf":
             port = input("COM port: ")
             self.connector = NrfConnector(port)
@@ -66,6 +60,8 @@ class ZigbearCli(Cmd):
             self.connector = MockConnector()
         else:
             self.connector = None
+        if self.connector is not None:
+            self.connector.start()
 
     def do_exit(self, inp):
         '''exits the CMD'''

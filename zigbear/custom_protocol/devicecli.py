@@ -11,3 +11,6 @@ class DeviceCli(Cmd):
 
     def do_send(self, arg):
         self.device.send(1, arg)
+
+    def do_info(self, arg):
+        self.device.print_info()
