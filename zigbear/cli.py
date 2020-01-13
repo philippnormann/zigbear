@@ -18,10 +18,13 @@ class ZigbearCli(Cmd):
 
     def do_channel(self, arg):
         '''channel <channel>: set the channel in the current connector'''
-        if len(arg) == 0:
-            print()
+        if self.connector:
+            if len(arg) > 0:
+                self.connector.set_channel(arg)
+            else:
+                print(f'invalid channel {arg}')
         else:
-            self.connector.set_channel(arg)
+            print("please specify a radio connector")
 
     def do_zigbee(self, arg):
         if self.connector:
