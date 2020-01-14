@@ -87,10 +87,12 @@ class CC2531Connector(Connector):
 
     def __listen(self):
         while self.started:
-            data = self.__read_frame().hex()
-            if (len(data) > 0):
-                logger.info(data)
-                self.receive(data)
+            data = self.__read_frame()
+            if data:
+                data = data.hex()[:-4] # remove FCS the last to bytes (4 hex characters)
+                if (len(data) > 0):
+                    logger.info(data)
+                    self.receive(data)
 
     def __write_command(self, cmd, len=0, data=bytearray()):
         bytes = bytearray((SNIFFER_PROTO_VERSION, cmd))
