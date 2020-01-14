@@ -1,6 +1,6 @@
 import socket
+from struct import pack
 from abc import abstractmethod
-from PyCRC.CRC16Kermit import CRC16Kermit
 
 
 class Connector:
@@ -10,11 +10,11 @@ class Connector:
         self.receive_callback = lambda arr: arr
 
     @abstractmethod
-    def _set_channel(self, channel):
+    def _set_channel(self, channel: int):
         raise NotImplementedError()
 
     @abstractmethod
-    def _send(self, data):
+    def _send(self, data: bytes):
         raise NotImplementedError()
 
     @abstractmethod
@@ -25,16 +25,23 @@ class Connector:
     def _close(self):
         raise NotImplementedError()
 
-    def _get_CRC(self, package):
-        packageBytes = bytes.fromhex(package)
-        return hex(CRC16Kermit().calculate(packageBytes))[2:].zfill(4)
+    def _get_CRC(self, data: bytes) -> bytes:
+        crc = 0
+        for i in range(0, len(data)):
+            c = data[i]
+            q = (crc ^ c) & 15  # Do low-order 4 bits
+            crc = (crc // 16) ^ (q * 4225)
+            q = (crc ^ (c // 16)) & 15  # And high 4 bits
+            crc = (crc // 16) ^ (q * 4225)
+        return pack('<H', crc)  # return as bytes in little endian order
 
-    def set_channel(self, channel):
-        # TODO check channel is number and between 11 and 25
-        self._set_channel(channel)
+    def set_channel(self, channel: int):
+        if 11 <= channel <= 25:
+            self._set_channel(channel)
 
-    def set_receive_callback(self, callback):
-        self.receive_callback = callback
+    def set_receive_callback(self, callback: object):
+        if callable(callback):
+            self.receive_callback = callback
 
     def start(self):
         self._start()
@@ -42,11 +49,13 @@ class Connector:
     def close(self):
         self._close()
 
-    def receive(self, data):
-        self.wireshark_sock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wireshark_addr)
+    def receive(self, data: bytes):
+        self.wireshark_sock.sendto(
+            data + self._get_CRC(data), self.wireshark_addr)
         if self.receive_callback:
             self.receive_callback(data)
 
-    def send(self, data):
-        self.wireshark_sock.sendto(bytearray.fromhex(data + self._get_CRC(data)), self.wireshark_addr)
+    def send(self, data: bytes):
+        self.wireshark_sock.sendto(
+            data + self._get_CRC(data), self.wireshark_addr)
         self._send(data)

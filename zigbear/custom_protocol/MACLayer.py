@@ -19,7 +19,7 @@ class MACLayer:
         self.sequence = (self.sequence + 1) % 256
         return s
 
-    def send(self, data, destination):
+    def send(self, data: bytes, destination: int):
         ieee_fc = Dot15d4(fcf_reserved_1=0, fcf_panidcompress=1, fcf_ackreq=0,
                           fcf_pending=0, fcf_security=0, fcf_frametype=0x1,
                           fcf_srcaddrmode=0x2, fcf_framever=0x0, fcf_destaddrmode=0x2,
@@ -27,10 +27,10 @@ class MACLayer:
 
         ieee_data = Dot15d4Data(dest_panid=self.network, dest_addr=destination, src_addr=self.address)
 
-        self.connector.send((ieee_fc / ieee_data / data).build().hex())
+        self.connector.send((ieee_fc / ieee_data / data).build())
 
-    def receive(self, data):
-        ieee_fc = Dot15d4(bytearray.fromhex(data))
+    def receive(self, data: bytes):
+        ieee_fc = Dot15d4(data)
         ieee_data = ieee_fc.payload
 
         if (ieee_data.dest_panid == self.network or ieee_data.dest_panid == 0xffff) \

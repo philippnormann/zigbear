@@ -67,8 +67,8 @@ class CC2531Connector(Connector):
             sys.exit(1)
         logger.info('Serial port %s opened' % (self.port.name))
 
-    def _send(self, data):
-        self.__write_command(CMD_SEND_DATA, len(bytearray.fromhex(data)), bytearray.fromhex(data))
+    def _send(self, data: bytes):
+        self.__write_command(CMD_SEND_DATA, len(data), data)
 
     def _start(self):
         if (not self.started) or (not self.thread.isAlive()):
@@ -81,15 +81,14 @@ class CC2531Connector(Connector):
     def _close(self):
         self.started = False
 
-    def _set_channel(self, channel):
-        channel = int(channel)
+    def _set_channel(self, channel: int):
         self.__write_command(CMD_SET_CHANNEL, 1, bytearray((channel,)))
 
     def __listen(self):
         while self.started:
             data = self.__read_frame()
             if data:
-                data = data.hex()[:-4] # remove FCS the last to bytes (4 hex characters)
+                data = data[:-2] # remove FCS the last two bytes
                 if (len(data) > 0):
                     logger.info(data)
                     self.receive(data)

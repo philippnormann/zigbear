@@ -15,26 +15,27 @@ class NrfConnector(Connector):
         self.timeout = 1
         self.ser = serial.Serial(self.port, baudrate=self.baud, timeout=self.timeout)
 
-    def __send(self, data):
+    def __send(self, data: str):
         c = math.ceil(len(data) / 80)
         for i in range(c):
             self.ser.write(data[i * 80:(i * 80) + 80].encode())
             self.ser.flush()
             time.sleep(0.01)
 
-    def _send(self, data):
-        self.__send("send {}\n".format(data))
+    def _send(self, data: bytes):
+        self.__send(f"send {data.hex()}\n")
 
-    def _set_channel(self, channel):
-        self.__send("channel {}\n".format(channel))
+    def _set_channel(self, channel: int):
+        self.__send(f"channel {channel}\n")
 
-    def handle_data(self, data):
+    def handle_data(self, data: str):
         receiveParsed = parse("received: power: {} lqi: {} data: {}", data)
         if receiveParsed:
-            power = receiveParsed[0]
-            lqi = receiveParsed[1]
-            package = receiveParsed[2]
-            self.receive(package)
+            _power = receiveParsed[0]
+            _lqi = receiveParsed[1]
+            package_hex = receiveParsed[2]
+            package_bytes = bytes.fromhex(package_hex)
+            self.receive(package_bytes)
         else:
             pass
             #print("serial error: cannot parse {}".format(data))

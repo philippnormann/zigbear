@@ -8,15 +8,15 @@ pytest = "*"
 pipenv-setup = "*"
 pylint = "*"
 autopep8 = "*"
-jupyterlab = "*"
 rope = "*"
+mypy = "*"
 
 [packages]
 scapy = "*"
 pyserial = "*"
 pycryptodomex = "*"
-pycrc = "*"
 parse = "*"
+cryptography = "*"
 
 [requires]
 python_version = "3.7"

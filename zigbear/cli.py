@@ -20,7 +20,7 @@ class ZigbearCli(Cmd):
         '''channel <channel>: set the channel in the current connector'''
         if self.connector:
             if len(arg) > 0:
-                self.connector.set_channel(arg)
+                self.connector.set_channel(int(arg))
             else:
                 print(f'invalid channel {arg}')
         else:
@@ -46,7 +46,7 @@ class ZigbearCli(Cmd):
 
     def do_send(self, inp):
         '''send <hexStr>: send the hexStr'''
-        self.connector.send(inp)
+        self.connector.send(bytes.fromhex(inp.strip()))
 
     def do_connector(self, arg):
         '''connector <type>: sets the connector for radio'''
