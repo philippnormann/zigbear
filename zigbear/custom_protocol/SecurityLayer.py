@@ -31,14 +31,13 @@ class SecurityLayer:
         if message_type == 0:
             applayer_data = secdata
         # TODO Wait for acknowledgement and retry
-        elif message_type == 1 and not self.network_key:
+        elif message_type == 1:
             peer_public_key = self.deserialize_public_key(secdata)
             self.key_cache[source]["peer_public_key"] = peer_public_key
             if "public_key" not in self.key_cache[source]:
                 self.generate_public_key(self, source)
             self.generate_derived_keys(self, source, peer_public_key, "test")
             if sec.flags & 1:
-                pass
                 self.send(self, source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
         elif message_type == 2 and not self.network_key:
             network_key = self.decryption(self, sec.fc, secdata, sec.mac, source, True)
