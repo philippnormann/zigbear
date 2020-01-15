@@ -4,9 +4,10 @@ from scapy.packet import Raw
 
 from zigbear.custom_protocol.protocol import NetworkHeader
 
+MAX_PACKAGE_LENGTH = 80
+
 
 class NetworkLayer:
-    MAX_PACKAGE_LENGTH = 80
 
     def __init__(self, MACLayer):
         self.MACLayer = MACLayer
