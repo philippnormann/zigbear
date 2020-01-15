@@ -10,7 +10,10 @@ class DeviceCli(Cmd):
         self.device = Device(connector)
 
     def do_send(self, arg):
-        self.device.send(1, arg)
+        try:
+            self.device.send(1, arg)
+        except:
+            print("Error found")
 
     def do_info(self, arg):
         self.device.print_info()

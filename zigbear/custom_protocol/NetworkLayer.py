@@ -6,6 +6,7 @@ from zigbear.custom_protocol.protocol import NetworkHeader
 
 
 class NetworkLayer:
+    MAX_PACKAGE_LENGTH = 80
 
     def __init__(self, MACLayer):
         self.MACLayer = MACLayer
@@ -31,12 +32,12 @@ class NetworkLayer:
 
     def send(self, destination, port, data):
         rawData = data.build()
-        packetcount = math.ceil(len(rawData) / 100)
+        packetcount = math.ceil(len(rawData) / MAX_PACKAGE_LENGTH)
 
         packet_id = self.get_packet_id(destination, port)
 
         for i in range(packetcount):
-            d = rawData[i*100:(i*100)+100]
+            d = rawData[i*MAX_PACKAGE_LENGTH:(i*MAX_PACKAGE_LENGTH)+MAX_PACKAGE_LENGTH]
             h = NetworkHeader(port = port, package_id = packet_id, sequence_number = i)
             h.frame_control.package_start = i == 0
             if i == 0:
