@@ -14,6 +14,14 @@ class SecurityLayer:
         self.key_cache = {}
         # Can and should be none for non-coordinators
         self.network_key = network_key
+        self.receive_callback = lambda source, port, data: source
+        self.networkLayer.set_receive_callback(self.receive)
+
+    def set_receive_callback(self, callback):
+        self.receive_callback = callback
+
+    def enable_pairing_mode(self):
+        self.network_key = None
 
     def receive(self, source, port, data):
         sec = ZigbearSecurityLayer(data)
@@ -22,7 +30,8 @@ class SecurityLayer:
         applayer_data = None
         if message_type == 0:
             applayer_data = secdata
-        elif message_type == 1:
+        # TODO Wait for acknowledgement and retry
+        elif message_type == 1 and not self.network_key:
             peer_public_key = self.deserialize_public_key(secdata)
             self.key_cache[source]["peer_public_key"] = peer_public_key
             if "public_key" not in self.key_cache[source]:
@@ -31,15 +40,14 @@ class SecurityLayer:
             if sec.flags & 1:
                 pass
                 self.send(self, source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
-        elif message_type == 2:
+        elif message_type == 2 and not self.network_key:
             network_key = self.decryption(self, sec.fc, secdata, sec.mac, source, True)
             self.network_key = network_key
             self.key_cache[source] = {}
         else:
             applayer_data = self.decryption(self, sec.fc, secdata, sec.mac, source)
         if applayer_data:
-            pass
-            #TODO send to app-layer
+            self.receive_callback(source, port, applayer_data)
 
     def send(self, destination, port, data, message_type, flags):
         packet = ZigbearSecurityLayer(flags=flags, message_type=message_type, fc=self.framecount)
@@ -52,7 +60,7 @@ class SecurityLayer:
         packet.data = packet_data
         if mac:
             packet.mac = mac
-        #TODO send to network-layer
+        self.networkLayer.send(destination, port, packet)
 
     def generate_public_key(self, source):
         self.key_cache[source] = {}
