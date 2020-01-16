@@ -1,4 +1,5 @@
 import socket
+import threading
 from struct import pack
 from abc import abstractmethod
 
@@ -8,6 +9,7 @@ class Connector:
         self.wireshark_addr = (wireshark_host, wireshark_port)
         self.wireshark_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.receive_callback = lambda arr: arr
+        self.send_lock = threading.Lock()
 
     @abstractmethod
     def _set_channel(self, channel: int):
@@ -58,4 +60,5 @@ class Connector:
     def send(self, data: bytes):
         self.wireshark_sock.sendto(
             data + self._get_CRC(data), self.wireshark_addr)
-        self._send(data)
+        with self.send_lock:
+            self._send(data)
