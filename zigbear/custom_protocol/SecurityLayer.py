@@ -1,4 +1,4 @@
-import math
+import secrets
 
 from zigbear.custom_protocol.NegotiationLayer import ZigbearSecurityLayer
 from cryptography.hazmat.backends import default_backend
@@ -7,60 +7,88 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
+from cryptography.exceptions import InvalidTag
 
 class SecurityLayer:
     def __init__(self, networkLayer, network_key=None):
         self.networkLayer = networkLayer
-        self.framecount = 0
+        self.framecount = secrets.randbelow(2**32)
         self.key_cache = {}
+        self.framecount_cache = {}
         # Can and should be none for non-coordinators
         self.network_key = b"network_keynetwork_keynetwork_ke"
         self.receive_callback = lambda source, port, data: source
+        self.accept_callback = lambda source: accept
         self.networkLayer.set_receive_callback(self.receive)
 
     def new_framecount(self):
         s = self.framecount
-        self.framecount = (self.framecount + 1) % int(math.pow(2, 32))
+        self.framecount = (self.framecount + 1) % 2**32
         return s
+
+    def check_framecount(self, source, framecount):
+        if source in self.framecount_cache:
+            result = self.framecount_cache[source] < framecount
+        else:
+            self.framecount_cache[source] = framecount
+            result = True
+        return result
 
     def set_receive_callback(self, callback):
         self.receive_callback = callback
+
+    def set_accept_callback(self, callback):
+        self.accept_callback = callback
 
     def enable_pairing_mode(self):
         self.network_key = None
 
     def receive(self, source, port, data):
-        sec = ZigbearSecurityLayer(data)
-        secdata = sec.data
-        message_type = sec.message_type
-        applayer_data = None
-        if message_type == 0:
-            applayer_data = secdata
-        elif message_type == 1:
-            peer_public_key = self.deserialize_public_key(secdata)
-            self.key_cache[source]["peer_public_key"] = peer_public_key
-            if "public_key" not in self.key_cache[source]:
-                self.generate_public_key(source)
-            self.generate_derived_keys(source, peer_public_key, "test")
-            if sec.flags & 1:
-                self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
-        elif message_type == 2 and not self.network_key:
-            network_key = self.decryption(sec.fc, secdata, sec.mac, source, True)
-            self.network_key = network_key
-            self.key_cache[source] = {}
-        else:
-            applayer_data = self.decryption(sec.fc, secdata, sec.mac, source)
-        if applayer_data:
-            self.receive_callback(source, port, applayer_data)
+        try:
+            sec = ZigbearSecurityLayer(data)
+        except:
+            sec = None
+        if sec:
+            secdata = sec.data
+            message_type = sec.message_type
+            packet_framecount = sec.fc
+            applayer_data = None
+            if self.check_framecount(source, packet_framecount):
+                if message_type == 0:
+                    applayer_data = secdata
+                elif message_type == 1:
+                    peer_public_key = self.deserialize_public_key(secdata)
+                    self.key_cache[source]["peer_public_key"] = peer_public_key
+                    if "public_key" not in self.key_cache[source]:
+                        self.generate_public_key(source)
+                    self.generate_derived_keys(source, peer_public_key, b"test")
+                    if sec.flags & 1 and not self.network_key:
+                        self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
+                    if self.network_key and self.accept_callback:
+                        self.send(source, port, self.network_key, 2, 0)
+                elif message_type == 2 and not self.network_key:
+                    error, network_key = self.decryption(packet_framecount, secdata, sec.mac, source, True)
+                    if not error:
+                        self.network_key = network_key
+                        self.key_cache[source] = {}
+                        self.framecount_cache[source] = packet_framecount
+                else:
+                    error, applayer_data = self.decryption(packet_framecount, secdata, sec.mac, source)
+                    if not error:
+                        self.framecount_cache[source] = packet_framecount
+                if applayer_data:
+                    self.receive_callback(source, port, applayer_data)
 
     def send(self, destination, port, data, message_type = 3, flags = 0):
         framecount = self.new_framecount()
         packet = ZigbearSecurityLayer(flags=flags, message_type=message_type, fc=framecount)
         packet_data = None
         mac = None
-        if message_type < 2:
+        if message_type == 0:
             packet_data = data
+        elif message_type == 1:
+            self.generate_public_key(destination)
+            packet_data = self.serialize_public_key(self.key_cache[destination]["public_key"])
         else:
             packet_data, mac = self.encryption(framecount, data.build(), destination, (message_type == 2))
         packet.data = packet_data
@@ -105,4 +133,10 @@ class SecurityLayer:
         key = self.key_cache[source]["shared_encryption_key"] if shared else self.network_key
         nonce = self.get_nonce(framecount, source)
         aesgcm = AESGCM(key)
-        return aesgcm.decrypt(nonce, data + mac.to_bytes(16, 'big'), None)
+        try:
+            result = aesgcm.decrypt(nonce, data + mac.to_bytes(16, 'big'), None)
+            error = None
+        except:
+            result = None
+            error = 1
+        return (error, result)
