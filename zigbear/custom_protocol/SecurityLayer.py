@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import secrets
+=======
+import math
+
+>>>>>>> 19426c7e7729cdab2e177af8685498898f458b85
 from zigbear.custom_protocol.NegotiationLayer import ZigbearSecurityLayer
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
