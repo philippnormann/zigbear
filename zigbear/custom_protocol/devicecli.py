@@ -12,8 +12,8 @@ class DeviceCli(Cmd):
     def do_send(self, arg):
         try:
             self.device.send(1, arg)
-        except:
-            print("Error found")
+        except Exception as e:
+            print(e)
 
     def do_info(self, arg):
         self.device.print_info()
