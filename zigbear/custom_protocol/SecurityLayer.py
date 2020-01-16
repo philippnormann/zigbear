@@ -21,7 +21,7 @@ class SecurityLayer:
 
     def new_framecount(self):
         s = self.framecount
-        self.framecount = (self.framecount + 1) % math.pow(2, 32)
+        self.framecount = (self.framecount + 1) % int(math.pow(2, 32))
         return s
 
     def set_receive_callback(self, callback):

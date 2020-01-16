@@ -35,7 +35,7 @@ class NetworkLayer:
                                 self.MACLayer.send(p['packet'], destination)
                                 p['retry'] = p['retry'] + 1
                                 p['time'] = datetime.now()
-                                if p['retry'] > 3:
+                                if p['retry'] >= 3:
                                     self.abort_retries(destination, port, packet_id, sequence_number)
             time.sleep(1)
 
