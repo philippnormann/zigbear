@@ -1,3 +1,5 @@
+import math
+
 from zigbear.custom_protocol.NegotiationLayer import ZigbearSecurityLayer
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -19,7 +21,7 @@ class SecurityLayer:
 
     def new_framecount(self):
         s = self.framecount
-        self.framecount = (self.framecount + 1) % 2 ^ 32
+        self.framecount = (self.framecount + 1) % math.pow(2, 32)
         return s
 
     def set_receive_callback(self, callback):
