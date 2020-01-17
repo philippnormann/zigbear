@@ -110,7 +110,11 @@ class NetworkLayer:
     # TODO Maybe send ack package after receive package
     # TODO Maybe set timestamp of first package and clear cache after time
     def receive(self, source, data):
-        h = NetworkHeader(data)
+        try:
+            h = NetworkHeader(data)
+        except:
+            return  # TODO log error in debug level
+
         if h.frame_control.ack:
             self.abort_retries(source, h.port, h.package_id, h.sequence_number)
         else:

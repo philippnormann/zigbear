@@ -27,7 +27,7 @@ class ProtocolStack:
         return self.maclayer.address
 
     def get_networkkey(self):
-        return ""  # TODO
+        return self.securitylayer.network_key
 
     def get_privatekey(self):
         return ""  # TODO
