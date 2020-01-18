@@ -15,10 +15,9 @@ class SecurityLayer:
         self.framecount = secrets.randbelow(2**32)
         self.key_cache = {}
         self.framecount_cache = {}
-        # Can and should be none for non-coordinators
-        self.network_key = b"network_keynetwork_keynetwork_ke"
+        # Can and should be none for non-coordinators (has to be 128, 192 or 256 bit)
+        self.network_key = network_key
         self.receive_callback = lambda source, port, data: source
-        self.accept_callback = lambda source: accept
         self.networkLayer.set_receive_callback(self.receive)
 
     def new_framecount(self):
@@ -36,9 +35,6 @@ class SecurityLayer:
 
     def set_receive_callback(self, callback):
         self.receive_callback = callback
-
-    def set_accept_callback(self, callback):
-        self.accept_callback = callback
 
     def enable_pairing_mode(self):
         self.network_key = None
@@ -64,13 +60,11 @@ class SecurityLayer:
                     self.generate_derived_keys(source, peer_public_key, b"test")
                     if sec.flags & 1 and not self.network_key:
                         self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
-                    if self.network_key and self.accept_callback:
-                        self.send(source, port, self.network_key, 2, 0)
                 elif message_type == 2 and not self.network_key:
                     error, network_key = self.decryption(packet_framecount, secdata, sec.mac, source, True)
                     if not error:
                         self.network_key = network_key
-                        self.key_cache[source] = {}
+                        self.key_cache.pop(source, None)
                         self.framecount_cache[source] = packet_framecount
                 else:
                     error, applayer_data = self.decryption(packet_framecount, secdata, sec.mac, source)
@@ -95,6 +89,9 @@ class SecurityLayer:
         if mac:
             packet.mac = int.from_bytes(mac, 'big')
         self.networkLayer.send(destination, port, packet)
+
+    def get_connection_attempts(self):
+        return list(self.key_cache.keys())
 
     def generate_public_key(self, source):
         self.key_cache[source] = {}
@@ -131,6 +128,8 @@ class SecurityLayer:
 
     def decryption(self, framecount, data, mac, source, shared=False):
         key = self.key_cache[source]["shared_encryption_key"] if shared else self.network_key
+        if shared:
+            self.key_cache.pop(source, None)
         nonce = self.get_nonce(framecount, source)
         aesgcm = AESGCM(key)
         try:
