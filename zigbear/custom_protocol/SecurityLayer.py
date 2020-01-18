@@ -53,10 +53,10 @@ class SecurityLayer:
                 if message_type == 0:
                     applayer_data = secdata
                 elif message_type == 1:
+                    if source not in self.key_cache or "public_key" not in self.key_cache[source]:
+                        self.generate_public_key(source)
                     peer_public_key = self.deserialize_public_key(secdata)
                     self.key_cache[source]["peer_public_key"] = peer_public_key
-                    if "public_key" not in self.key_cache[source]:
-                        self.generate_public_key(source)
                     self.generate_derived_keys(source, peer_public_key, b"test")
                     if sec.flags & 1 and not self.network_key:
                         self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
@@ -70,6 +70,7 @@ class SecurityLayer:
                     error, applayer_data = self.decryption(packet_framecount, secdata, sec.mac, source)
                     if not error:
                         self.framecount_cache[source] = packet_framecount
+                        print("received: " + str(applayer_data))
                 if applayer_data:
                     self.receive_callback(source, port, applayer_data)
 
@@ -81,10 +82,14 @@ class SecurityLayer:
         if message_type == 0:
             packet_data = data
         elif message_type == 1:
-            self.generate_public_key(destination)
-            packet_data = self.serialize_public_key(self.key_cache[destination]["public_key"])
+            if destination not in self.key_cache or "public_key" not in self.key_cache[destination]:
+                self.generate_public_key(destination)
+            serialized_key = self.serialize_public_key(self.key_cache[destination]["public_key"])
+            packet_data = serialized_key
+        elif message_type == 2:
+            packet_data, mac = self.encryption(framecount, self.network_key, destination, True)
         else:
-            packet_data, mac = self.encryption(framecount, data.build(), destination, (message_type == 2))
+            packet_data, mac = self.encryption(framecount, data.build(), destination)
         packet.data = packet_data
         if mac:
             packet.mac = int.from_bytes(mac, 'big')

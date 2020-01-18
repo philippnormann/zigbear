@@ -15,6 +15,12 @@ class ApplicationLayer:
         def send(self, data):
             self.application_layer.security_layer.send(self.other, self.port, data)
 
+        def send_initiation_packet(self):
+            self.application_layer.security_layer.send(self.other, self.port, None, 1, 1)
+
+        def send_network_key(self):
+            self.application_layer.security_layer.send(self.other, self.port, None, 2, 0)
+
         def receive(self, timeout=30):
             try:
                 return self.queue.get(True, timeout)

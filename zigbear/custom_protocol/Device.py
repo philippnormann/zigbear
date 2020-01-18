@@ -17,7 +17,7 @@ class Device:
     def send(self, destination, message):
         session = self.protocol_stack.connect(destination, 100)
         session.send(Raw(message))
-        answer = session.receive().build()
+        answer = session.receive()
         print("Answer: {}".format(answer))
         session.close()
 

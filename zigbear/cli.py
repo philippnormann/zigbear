@@ -6,6 +6,7 @@ from zigbear.radio.cc2531connector import CC2531Connector
 from zigbear.radio.mockconnector import MockConnector
 from zigbear.radio.nrfconnector import NrfConnector
 from zigbear.radio.raspbeeconnector import RaspbeeConnector
+from zigbear.radio.socketconnector import SocketConnector
 from zigbear.zigbee.zigbeeCli import ZigbeeCli
 
 
@@ -62,6 +63,10 @@ class ZigbearCli(Cmd):
             self.connector = RaspbeeConnector(wireshark_host=host)
         elif arg == "mock":
             self.connector = MockConnector()
+        elif arg == "socket":
+            r_port = input("UDP Port for receiving: ")
+            t_port = input("UDP Port to send to: ")
+            self.connector = SocketConnector(receive_port=r_port, target_port=t_port)
         else:
             self.connector = None
         if self.connector is not None:

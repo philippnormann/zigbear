@@ -7,11 +7,11 @@ from zigbear.custom_protocol.SecurityLayer import SecurityLayer
 
 
 class ProtocolStack:
-    def __init__(self, connector):
+    def __init__(self, connector, network_key=None):
         self.connector = connector
         self.maclayer = MACLayer(self.connector, 0, 0)
         self.networklayer = NetworkLayer(self.maclayer)
-        self.securitylayer = SecurityLayer(self.networklayer)
+        self.securitylayer = SecurityLayer(self.networklayer, network_key)
         self.application = ApplicationLayer(self.securitylayer)
 
     def set_panid(self, pan):
@@ -49,6 +49,11 @@ class ProtocolStack:
 
     def listen(self, port, handler):
         return self.application.listen(port, handler)
+
+    def get_init_devices(self):
+        return  {
+                    "init_devices": self.securitylayer.get_connection_attempts()
+                }
 
     def status(self):
         return {
