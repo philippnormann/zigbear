@@ -47,7 +47,11 @@ class ZigbearCli(Cmd):
 
     def do_send(self, inp):
         '''send <hexStr>: send the hexStr'''
-        self.connector.send(bytes.fromhex(inp.strip()))
+        try:
+            frame = bytes.fromhex(inp.strip())
+            self.connector.send(frame)
+        except ValueError:
+            print("invalid hex number")
 
     def do_connector(self, arg):
         '''connector <type>: sets the connector for radio'''
