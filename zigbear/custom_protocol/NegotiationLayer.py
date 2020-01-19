@@ -1,6 +1,7 @@
 from scapy.packet import Packet
 from scapy.fields import StrField, BitEnumField, FlagsField, XLEIntField, ConditionalField, BitField
 
+
 class ZigbearSecurityLayer(Packet):
     name = "Zigbear Security Header"
     fields_desc = [

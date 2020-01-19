@@ -3,15 +3,16 @@ from scapy.packet import Raw
 from zigbear.custom_protocol.ApplicationLayer import ApplicationLayer
 from zigbear.custom_protocol.MACLayer import MACLayer
 from zigbear.custom_protocol.NetworkLayer import NetworkLayer
+from zigbear.custom_protocol.SecurityLayer import SecurityLayer
 
 
 class ProtocolStack:
-    def __init__(self, connector):
+    def __init__(self, connector, network_key=None):
         self.connector = connector
         self.maclayer = MACLayer(self.connector, 0, 0)
         self.networklayer = NetworkLayer(self.maclayer)
-        # self.securitylayer = SecurityLayer(self.networklayer)
-        self.application = ApplicationLayer(self.networklayer)
+        self.securitylayer = SecurityLayer(self.networklayer, network_key)
+        self.application = ApplicationLayer(self.securitylayer)
 
     def set_panid(self, pan):
         self.maclayer.network = pan
@@ -26,7 +27,7 @@ class ProtocolStack:
         return self.maclayer.address
 
     def get_networkkey(self):
-        return ""  # TODO
+        return self.securitylayer.network_key
 
     def get_privatekey(self):
         return ""  # TODO
@@ -48,6 +49,11 @@ class ProtocolStack:
 
     def listen(self, port, handler):
         return self.application.listen(port, handler)
+
+    def get_init_devices(self):
+        return  {
+                    "init_devices": self.securitylayer.get_connection_attempts()
+                }
 
     def status(self):
         return {

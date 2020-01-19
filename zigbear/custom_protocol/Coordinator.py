@@ -7,7 +7,7 @@ from zigbear.custom_protocol.stack import ProtocolStack
 
 class Coordinator:
     def __init__(self, connector):
-        self.protocol_stack = ProtocolStack(connector)
+        self.protocol_stack = ProtocolStack(connector, b"network_keynetwork_keynetwork_ke")
         self.protocol_stack.set_address(1)
 
     def start_server(self):
@@ -20,6 +20,16 @@ class Coordinator:
         listener = self.protocol_stack.listen(100, handler)
         time.sleep(100000)
         listener.close()
+
+    def initiate_contact(self, destination):
+        session = self.protocol_stack.connect(int(destination), 100)
+        session.send_initiation_packet()
+        session.close()
+
+    def pair_devices(self, destination):
+        session = self.protocol_stack.connect(int(destination), 100)
+        session.send_network_key()
+        session.close()
 
     def start(self):
         pass  # TODO
@@ -38,6 +48,11 @@ class Coordinator:
 
     def list_devices(self):
         pass  # TODO
+
+    def print_init(self):
+        print("""
+INIT DEVICES: {init_devices}
+                """.format(**self.protocol_stack.get_init_devices()).strip())
 
     def print_info(self):
         print("""

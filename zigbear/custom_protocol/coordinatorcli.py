@@ -19,3 +19,12 @@ class CoordinatorCli(Cmd):
         self.coordinator.start_server()
         pass # TODO accept a new device with name and public key
 
+    def do_initiate(self, arg):
+        self.coordinator.initiate_contact(arg)
+
+    def do_inits(self, _):
+        self.coordinator.print_init()
+
+    def do_sendkey(self, arg):
+        self.coordinator.pair_devices(arg)
+
