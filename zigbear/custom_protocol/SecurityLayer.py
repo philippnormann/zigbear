@@ -1,6 +1,6 @@
 import secrets
 
-from zigbear.custom_protocol.NegotiationLayer import ZigbearSecurityLayer
+from zigbear.custom_protocol.scapy_layers import ZigbearSecurityLayer
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec

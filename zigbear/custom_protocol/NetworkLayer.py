@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from scapy.packet import Raw
 
-from zigbear.custom_protocol.protocol import NetworkHeader
+from zigbear.custom_protocol.scapy_layers import NetworkHeader
 
 MAX_PACKAGE_LENGTH = 80
 
