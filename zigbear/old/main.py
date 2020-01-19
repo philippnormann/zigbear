@@ -39,7 +39,7 @@ def main():
         if cmd is 'R':
             print(args)
             _, length, lqi, package = args
-            print(f'Recieved frame len: {length}, signal strength: {lqi}')
+            print(f'Received frame len: {length}, signal strength: {lqi}')
             package = bytes.fromhex(package)
             sock.sendto(package, (WIRESHARK_HOST, WIRESHARK_PORT))
 

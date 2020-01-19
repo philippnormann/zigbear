@@ -199,19 +199,19 @@ uint8_t *usr_radio_receive_frame(uint8_t len, uint8_t *frm, uint8_t lqi, int8_t 
   return frm;
 }
 
-void dump_recieved_frame()
+void dump_received_frame()
 {
-  pcap *recieved = &PcapPool.pcaps[PcapPool.ridx];
-  uint8_t len = recieved->len;
-  uint8_t ed = recieved->ed;
-  uint8_t *frame = recieved->frame;
+  pcap *received = &PcapPool.pcaps[PcapPool.ridx];
+  uint8_t len = received->len;
+  uint8_t ed = received->ed;
+  uint8_t *frame = received->frame;
 
   PRINTF("R:%d:%d:", len, ed);
   hex_dump(frame, len);
   PRINT("\n\r");
 
   // mark buffer as processed
-  recieved->len = 0;
+  received->len = 0;
   PcapPool.ridx = (PcapPool.ridx + 1) % MAX_RECEIVE_BUFFERS;
 }
 
@@ -252,7 +252,7 @@ int main(void)
 
     if (PcapPool.widx != PcapPool.ridx && now - last_frame_dump > WAIT_AFTER_DUMP && sending == 0)
     {
-      dump_recieved_frame();
+      dump_received_frame();
       last_frame_dump = now;
     }
     else
