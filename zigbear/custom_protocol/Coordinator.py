@@ -3,6 +3,7 @@ import time
 from scapy.packet import Raw
 
 from zigbear.custom_protocol.stack import ProtocolStack
+from zigbear.custom_protocol.scapy_layers import ZigbearLightControlLayer
 
 
 class Coordinator:
@@ -21,13 +22,23 @@ class Coordinator:
         time.sleep(100000)
         listener.close()
 
-    def initiate_contact(self, destination):
-        session = self.protocol_stack.connect(int(destination), 100)
+    def toggle_lamp(self, destination: int):
+        session = self.protocol_stack.connect(destination, 100)
+        session.send(ZigbearLightControlLayer(message_type=0))
+        session.close()
+
+    def set_lamp_brightness(self, destination: int, brightness: int):
+        session = self.protocol_stack.connect(destination, 100)
+        session.send(ZigbearLightControlLayer(message_type=1, brightness=brightness))
+        session.close()
+
+    def initiate_contact(self, destination: int):
+        session = self.protocol_stack.connect(destination, 100)
         session.send_initiation_packet()
         session.close()
 
-    def pair_devices(self, destination):
-        session = self.protocol_stack.connect(int(destination), 100)
+    def pair_devices(self, destination: int):
+        session = self.protocol_stack.connect(destination, 100)
         session.send_network_key()
         session.close()
 

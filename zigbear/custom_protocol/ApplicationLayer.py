@@ -69,7 +69,7 @@ class ApplicationLayer:
     def register_listener(self, listener):
         self.listeners[listener.port] = listener
 
-    def register_unlistener(self, listener):
+    def unregister_listener(self, listener):
         self.listeners.pop(listener.port)
 
     def connect(self, destination, port):

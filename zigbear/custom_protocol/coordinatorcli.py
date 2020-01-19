@@ -10,21 +10,52 @@ class CoordinatorCli(Cmd):
         self.coordinator = Coordinator(connector)
 
     def do_devices(self, _):
-        pass # TODO print list of devices
+        pass  # TODO print list of devices
 
     def do_info(self, _):
         self.coordinator.print_info()
 
-    def do_accept(self, arg):
+    def do_accept(self, _):
         self.coordinator.start_server()
-        pass # TODO accept a new device with name and public key
+        pass  # TODO accept a new device with name and public key
 
-    def do_initiate(self, arg):
-        self.coordinator.initiate_contact(arg)
+    def do_toggle(self, arg: str):
+        '''brightness <dest_addr>: toggle lamp'''
+        try:
+            dest_addr = int(arg)
+            self.coordinator.toggle_lamp(dest_addr)
+        except ValueError:
+            print('invalid destination address')
+
+    def do_brightness(self, arg: str):
+        '''brightness <dest_addr> <brightness (0-255)>: set lamp to specific brightness'''
+        args = arg.split()
+        try:
+            dest_addr = int(args[0])
+        except:
+            print('invalid destination address')
+        try:
+            brightness = int(args[1])
+        except:
+            print('invalid brightness value')
+        if 0 <= brightness <= 255:
+            self.coordinator.set_lamp_brightness(dest_addr, brightness)
+        else:
+            print('brightness value must be between 0 and 255')
+
+    def do_initiate(self, arg: str):
+        try:
+            dest_addr = int(arg)
+            self.coordinator.initiate_contact(dest_addr)
+        except ValueError:
+            print('invalid destination address')
 
     def do_inits(self, _):
         self.coordinator.print_init()
 
-    def do_sendkey(self, arg):
-        self.coordinator.pair_devices(arg)
-
+    def do_sendkey(self, arg: str):
+        try:
+            dest_addr = int(arg)
+            self.coordinator.pair_devices(dest_addr)
+        except ValueError:
+            print('invalid destination address')

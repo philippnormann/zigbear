@@ -41,3 +41,16 @@ class ZigbearSecurityLayer(Packet):
         # Can be data encrpted with the network key
         StrField("data", "")
     ]
+
+class ZigbearLightControlLayer(Packet):
+    name = "Zigbear Light Control Layer"
+    fields_desc = [
+        # Informational flags
+        FlagsField("flags", 0, 6, ['reserved0', 'reserved1','reserved2','reserved3','reserved4','reserved5']),
+        # Message type
+        BitEnumField("message_type", 0, 2, {
+            0: 'toggle',
+            1: 'set_brightness'
+        }),
+        ConditionalField(ByteField("brightness", 0), lambda pkt: pkt.getfieldval("message_type") == 1)
+    ]

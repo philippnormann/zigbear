@@ -1,9 +1,11 @@
+import time
 from random import random
 
 from scapy.packet import Raw
 
 from zigbear.custom_protocol.stack import ProtocolStack
-
+from zigbear.custom_protocol.scapy_layers import ZigbearLightControlLayer
+from zigbear.custom_protocol.virtual_lamp import Lamp
 
 class Device:
     @staticmethod
@@ -20,6 +22,10 @@ class Device:
         answer = session.receive()
         print("Answer: {}".format(answer))
         session.close()
+
+    def start_lamp(self):
+        lamp = Lamp(self.protocol_stack)
+        lamp.wait_for_input()
 
     def print_info(self):
         print("""
