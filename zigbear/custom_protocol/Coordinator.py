@@ -2,8 +2,8 @@ import time
 
 from scapy.packet import Raw
 
-from zigbear.custom_protocol.stack import ProtocolStack
 from zigbear.custom_protocol.scapy_layers import ZigbearLightControlLayer
+from zigbear.custom_protocol.stack import ProtocolStack
 
 
 class Coordinator:

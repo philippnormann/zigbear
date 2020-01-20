@@ -82,7 +82,8 @@ class NetworkLayer:
                     if packet_id not in self.packet_send_cache[destination][port]:
                         self.packet_send_cache[destination][port][packet_id] = {}
                     if i not in self.packet_send_cache[destination][port][packet_id]:
-                        self.packet_send_cache[destination][port][packet_id][i] = {'time': datetime.now(), 'packet': p, 'retry': 0}
+                        self.packet_send_cache[destination][port][packet_id][i] = {'time': datetime.now(), 'packet': p,
+                                                                                   'retry': 0}
 
             self.MACLayer.send(p, destination)
 

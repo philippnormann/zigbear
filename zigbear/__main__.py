@@ -1,7 +1,9 @@
-from zigbear.zigbear import main
 import argparse
 import logging
 import logging.config
+
+from zigbear.zigbear import main
+
 
 def arg_parser():
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
@@ -27,9 +29,12 @@ def arg_parser():
 
     return parser.parse_args()
 
+
 def log_init():
     if args.log_file is not False:
-        logging.basicConfig(filename=args.log_file, format='%(asctime)s - %(levelname)8s - %(message)s', level=args.log_level)
+        logging.basicConfig(filename=args.log_file, format='%(asctime)s - %(levelname)8s - %(message)s',
+                            level=args.log_level)
+
 
 if __name__ == "__main__":
     args = arg_parser()

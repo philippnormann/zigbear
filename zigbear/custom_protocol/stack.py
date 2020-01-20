@@ -1,5 +1,3 @@
-from scapy.packet import Raw
-
 from zigbear.custom_protocol.ApplicationLayer import ApplicationLayer
 from zigbear.custom_protocol.MACLayer import MACLayer
 from zigbear.custom_protocol.NetworkLayer import NetworkLayer
@@ -51,17 +49,17 @@ class ProtocolStack:
         return self.application.listen(port, handler)
 
     def get_init_devices(self):
-        return  {
-                    "init_devices": self.securitylayer.get_connection_attempts()
-                }
+        return {
+            "init_devices": self.securitylayer.get_connection_attempts()
+        }
 
     def status(self):
         return {
-                    "panid": self.get_panid(),
-                    "address": self.get_address(),
-                    "networkkey": self.get_networkkey(),
-                    "privatekey": self.get_privatekey(),
-                    "publickey": self.get_publickey(),
-                    "session_count": self.get_session_count(),
-                    "listeners_count": self.get_listeners_count()
-                }
+            "panid": self.get_panid(),
+            "address": self.get_address(),
+            "networkkey": self.get_networkkey(),
+            "privatekey": self.get_privatekey(),
+            "publickey": self.get_publickey(),
+            "session_count": self.get_session_count(),
+            "listeners_count": self.get_listeners_count()
+        }

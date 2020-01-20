@@ -1,18 +1,19 @@
 import secrets
 
-from zigbear.custom_protocol.scapy_layers import ZigbearSecurityLayer
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+from zigbear.custom_protocol.scapy_layers import ZigbearSecurityLayer
+
 
 class SecurityLayer:
     def __init__(self, networkLayer, network_key=None):
         self.networkLayer = networkLayer
-        self.framecount = secrets.randbelow(2**32)
+        self.framecount = secrets.randbelow(2 ** 32)
         self.key_cache = {}
         self.framecount_cache = {}
         # Can and should be none for non-coordinators (has to be 128, 192 or 256 bit)
@@ -22,7 +23,7 @@ class SecurityLayer:
 
     def new_framecount(self):
         s = self.framecount
-        self.framecount = (self.framecount + 1) % 2**32
+        self.framecount = (self.framecount + 1) % 2 ** 32
         return s
 
     def check_framecount(self, source, framecount):
@@ -74,7 +75,7 @@ class SecurityLayer:
                 if applayer_data:
                     self.receive_callback(source, port, applayer_data)
 
-    def send(self, destination, port, data, message_type = 3, flags = 0):
+    def send(self, destination, port, data, message_type=3, flags=0):
         framecount = self.new_framecount()
         packet = ZigbearSecurityLayer(flags=flags, message_type=message_type, fc=framecount)
         packet_data = None

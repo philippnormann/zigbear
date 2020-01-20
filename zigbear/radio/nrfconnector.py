@@ -1,8 +1,9 @@
 import math
 import threading
-from parse import *
-import serial
 import time
+
+import serial
+from parse import *
 
 from zigbear.radio.connector import Connector
 
@@ -38,7 +39,7 @@ class NrfConnector(Connector):
             self.receive(package_bytes)
         else:
             pass
-            #print("serial error: cannot parse {}".format(data))
+            # print("serial error: cannot parse {}".format(data))
 
     def read_from_port(self):
         buffer = ''

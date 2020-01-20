@@ -1,13 +1,13 @@
+import logging.handlers
+import struct
+import sys
+import threading
+
+import serial
+
 from zigbear.radio.connector import Connector
 
 # based on https://github.com/g-oikonomou/sensniff/blob/master/sensniff.py
-
-import serial
-import struct
-import threading
-import logging
-import logging.handlers
-import sys
 
 LINKTYPE_IEEE802_15_4_NOFCS = 230
 LINKTYPE_IEEE802_15_4 = 195
@@ -88,7 +88,7 @@ class CC2531Connector(Connector):
         while self.started:
             data = self.__read_frame()
             if data:
-                data = data[:-2] # remove FCS the last two bytes
+                data = data[:-2]  # remove FCS the last two bytes
                 if (len(data) > 0):
                     logger.info(data)
                     self.receive(data)

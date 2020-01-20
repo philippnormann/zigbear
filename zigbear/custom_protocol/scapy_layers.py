@@ -1,12 +1,14 @@
-from scapy.fields import ByteField, ShortField, SignedShortField, FlagsField, BitEnumField, ConditionalField, \
-    SignedIntField, SignedByteField, StrField, XLEIntField, BitField
+from scapy.fields import ByteField, ShortField, FlagsField, BitEnumField, ConditionalField, \
+    StrField, XLEIntField, BitField
 from scapy.packet import Packet
+
 
 class NetworkHeader(Packet):
     name = "Network Layer"
     fields_desc = [
         FlagsField("frame_control", 0, 8,
-                   ['reserved0', 'reserved1', 'reserved2', 'reserved3', 'reserved4', 'package_start', 'ack_req', 'ack']),
+                   ['reserved0', 'reserved1', 'reserved2', 'reserved3', 'reserved4', 'package_start', 'ack_req',
+                    'ack']),
         ByteField("port", 0),
         ByteField("package_id", 0),
         ConditionalField(
@@ -16,12 +18,14 @@ class NetworkHeader(Packet):
         ShortField("sequence_number", 0)
     ]
 
+
 class ZigbearSecurityLayer(Packet):
     name = "Zigbear Security Header"
     fields_desc = [
         # Message Info (1 octet)
         # Informational flags
-        FlagsField("flags", 0, 6, ['public_key_request', 'reserved1','reserved2','reserved3','reserved4','reserved5']),
+        FlagsField("flags", 0, 6,
+                   ['public_key_request', 'reserved1', 'reserved2', 'reserved3', 'reserved4', 'reserved5']),
         # Message type
         BitEnumField("message_type", 0, 2, {
             0: 'no_encryption',
@@ -42,11 +46,12 @@ class ZigbearSecurityLayer(Packet):
         StrField("data", "")
     ]
 
+
 class ZigbearLightControlLayer(Packet):
     name = "Zigbear Light Control Layer"
     fields_desc = [
         # Informational flags
-        FlagsField("flags", 0, 6, ['reserved0', 'reserved1','reserved2','reserved3','reserved4','reserved5']),
+        FlagsField("flags", 0, 6, ['reserved0', 'reserved1', 'reserved2', 'reserved3', 'reserved4', 'reserved5']),
         # Message type
         BitEnumField("message_type", 0, 2, {
             0: 'toggle',

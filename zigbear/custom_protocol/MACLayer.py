@@ -39,4 +39,3 @@ class MACLayer:
         if (ieee_data.dest_panid == self.network or ieee_data.dest_panid == 0xffff) \
                 and (ieee_data.dest_addr == self.address or ieee_data.dest_addr == 0xffff):
             self.receive_callback(ieee_data.src_addr, ieee_data.payload)
-

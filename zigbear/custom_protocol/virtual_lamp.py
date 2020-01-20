@@ -1,5 +1,7 @@
 from tkinter import Tk
+
 from zigbear.custom_protocol.scapy_layers import ZigbearLightControlLayer
+
 
 class Lamp():
     def __init__(self, protocol_stack):
@@ -7,7 +9,7 @@ class Lamp():
         self.window.title("Secure Lamp")
         self.window['bg'] = '#000000'
         self.protocol_stack = protocol_stack
-    
+
     @staticmethod
     def hex_to_rgb(hex):
         hex = hex.lstrip('#')
@@ -17,7 +19,7 @@ class Lamp():
     def handle_toggle(self):
         current_color = self.window['bg']
         r, g, b = self.hex_to_rgb(current_color)
-        r, g, b = 255-r, 255-g, 255-b
+        r, g, b = 255 - r, 255 - g, 255 - b
         self.window['bg'] = '#%02x%02x%02x' % (r, g, b)
 
     def handle_set_brightness(self, brightness):

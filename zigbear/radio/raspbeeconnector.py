@@ -1,8 +1,6 @@
-import sys
-import math
-from serial import Serial
-from typing import List
 from threading import Thread
+
+from serial import Serial
 
 from zigbear.radio.connector import Connector
 
@@ -61,4 +59,3 @@ class RaspbeeConnector(Connector):
     def _close(self):
         self.listen = False
         self.thread.join()
-

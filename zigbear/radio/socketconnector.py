@@ -1,6 +1,8 @@
 import socket
 import threading
+
 from zigbear.radio.connector import Connector
+
 
 class SocketConnector(Connector):
     def __init__(self, receive_port, target_port):
@@ -10,7 +12,7 @@ class SocketConnector(Connector):
         self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     def _send(self, data: bytes):
-        self.send_socket.sendto(data,("127.0.0.1", self.target_port))
+        self.send_socket.sendto(data, ("127.0.0.1", self.target_port))
 
     def read_from_socket(self):
         listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

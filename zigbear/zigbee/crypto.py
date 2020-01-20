@@ -1,9 +1,9 @@
-from Cryptodome.Cipher import AES
-
-from scapy.layers.dot15d4 import *
-from scapy.layers.zigbee import *
-from .scapy_adjustments import *
 import struct
+
+from Cryptodome.Cipher import AES
+from scapy.layers.dot15d4 import *
+
+from .scapy_adjustments import *
 
 conf.dot15d4_protocol = 'zigbee'
 
@@ -19,24 +19,24 @@ def block_xor(block1, block2):
 
 def zigbee_sec_hash(aInput):
     # construct the whole input
-    zero_padding_length = (((BLOCK_SIZE-2) - len(aInput) %
+    zero_padding_length = (((BLOCK_SIZE - 2) - len(aInput) %
                             BLOCK_SIZE) - 1) % BLOCK_SIZE
     padded_input = aInput + b'\x80' + b'\x00' * \
-        zero_padding_length + struct.pack(">H", 8*len(aInput))
-    number_of_blocks = int(len(padded_input)/BLOCK_SIZE)
-    key = b'\x00'*BLOCK_SIZE
+                   zero_padding_length + struct.pack(">H", 8 * len(aInput))
+    number_of_blocks = int(len(padded_input) / BLOCK_SIZE)
+    key = b'\x00' * BLOCK_SIZE
     for i in range(number_of_blocks):
         cipher = AES.new(key, AES.MODE_ECB)
         ciphertext = cipher.encrypt(
-            padded_input[BLOCK_SIZE*i:BLOCK_SIZE*(i+1)])
+            padded_input[BLOCK_SIZE * i:BLOCK_SIZE * (i + 1)])
         key = block_xor(
-            ciphertext, padded_input[BLOCK_SIZE*i:BLOCK_SIZE*(i+1)])
+            ciphertext, padded_input[BLOCK_SIZE * i:BLOCK_SIZE * (i + 1)])
     return key
 
 
 def zigbee_sec_key_hash(key, aInput):
-    ipad = b'\x36'*BLOCK_SIZE
-    opad = b'\x5c'*BLOCK_SIZE
+    ipad = b'\x36' * BLOCK_SIZE
+    opad = b'\x5c' * BLOCK_SIZE
     key_xor_ipad = block_xor(key, ipad)
     key_xor_opad = block_xor(key, opad)
     return zigbee_sec_hash(key_xor_opad + zigbee_sec_hash(key_xor_ipad + aInput))
@@ -47,7 +47,6 @@ def zigbee_trans_key(key):
 
 
 def zigbee_decrypt(key, nonce, extra_data, ciphertext, mic):
-
     cipher = AES.new(key, AES.MODE_CCM, nonce=nonce, mac_len=4)
     cipher.update(extra_data)
     text = cipher.decrypt(ciphertext)
@@ -60,7 +59,6 @@ def zigbee_decrypt(key, nonce, extra_data, ciphertext, mic):
 
 
 def zigbee_encrypt(key, nonce, extra_data, text):
-
     cipher = AES.new(key, AES.MODE_CCM, nonce=nonce, mac_len=4)
     cipher.update(extra_data)
 
@@ -70,14 +68,12 @@ def zigbee_encrypt(key, nonce, extra_data, text):
 
 
 def zigbee_get_packet_nonce(aPacket, extended_source):
-
-    nonce = struct.pack('Q', extended_source) + struct.pack(\
+    nonce = struct.pack('Q', extended_source) + struct.pack( \
         'I', aPacket[ZigbeeSecurityHeader2].fc) + struct.pack('B', bytes(aPacket[ZigbeeSecurityHeader2])[0])
     return nonce
 
 
 def zigbee_get_packet_header(aPacket):
-
     ciphertext = aPacket[ZigbeeSecurityHeader2].data
     mic = aPacket[ZigbeeSecurityHeader2].mic.to_bytes(4, byteorder='big')
     data_len = len(ciphertext) + len(mic)
@@ -97,7 +93,6 @@ def zigbee_get_packet_header(aPacket):
 
 
 def zigbee_packet_decrypt(key, aPacket, extended_source):
-
     new_packet = aPacket.copy()
     new_packet[ZigbeeSecurityHeader].nwk_seclevel = 5
     new_packet = Dot15d4FCS(bytes(new_packet))
@@ -119,7 +114,6 @@ def zigbee_packet_decrypt(key, aPacket, extended_source):
 
 
 def zigbee_packet_encrypt(key, aPacket, text, extended_source):
-
     if not ZigbeeSecurityHeader2 in aPacket:
         return b''
 

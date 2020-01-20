@@ -1,7 +1,7 @@
 import socket
 import threading
-from struct import pack
 from abc import abstractmethod
+from struct import pack
 
 
 class Connector:

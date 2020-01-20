@@ -1,11 +1,10 @@
-import time
 from random import random
 
 from scapy.packet import Raw
 
 from zigbear.custom_protocol.stack import ProtocolStack
-from zigbear.custom_protocol.scapy_layers import ZigbearLightControlLayer
 from zigbear.custom_protocol.virtual_lamp import Lamp
+
 
 class Device:
     @staticmethod

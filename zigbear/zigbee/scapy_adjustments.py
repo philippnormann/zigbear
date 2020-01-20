@@ -1,13 +1,16 @@
-import struct
-
 from scapy.layers.zigbee import *
 
 from scapy.packet import Packet
 from scapy.fields import ByteField, ConditionalField, StrField, \
-    ByteEnumField, EnumField, BitEnumField, FlagsField, ShortField, IntField
+    ByteEnumField, EnumField, BitEnumField, FlagsField, IntField
 from scapy.layers.dot15d4 import dot15d4AddressField
+from scapy.fields import ByteField, ConditionalField, StrField, \
+    ByteEnumField, EnumField, BitEnumField, FlagsField, IntField
+from scapy.layers.dot15d4 import dot15d4AddressField
+from scapy.layers.zigbee import *
+from scapy.packet import Packet
 
-    # ZigBee Cluster Library Identifiers, Table 2.2 ZCL
+# ZigBee Cluster Library Identifiers, Table 2.2 ZCL
 _zcl_cluster_identifier = {
     # Functional Domain: General
     0x0000: "basic",
@@ -102,6 +105,7 @@ _zcl_profile_identifier = {
     0x0109: "SE_Smart_Energy_Profile",
 }
 
+
 class ZigbeeAppDataPayload2(Packet):
     name = "Zigbee Application Layer Data Payload (General APS Frame Format)"
     fields_desc = [
@@ -123,26 +127,26 @@ class ZigbeeAppDataPayload2(Packet):
             # unsigned short (little-endian)
             EnumField("grp_address", 0, {}, fmt="<H"),
             lambda pkt: (pkt.frame_control.ack_req or pkt.aps_frametype == 2 \
-            or pkt.aps_frametype == 0)
+                         or pkt.aps_frametype == 0)
         ),
         # Cluster identifier (0/2 octets)
         ConditionalField(
             # unsigned short (little-endian)
             EnumField("cluster", 0, _zcl_cluster_identifier, fmt="<H"),
             lambda pkt: (pkt.frame_control.ack_req or pkt.aps_frametype == 2 \
-            or pkt.aps_frametype == 0)
+                         or pkt.aps_frametype == 0)
         ),
         # Profile identifier (0/2 octets)
         ConditionalField(
             EnumField("profile", 0, _zcl_profile_identifier, fmt="<H"),
             lambda pkt: (pkt.frame_control.ack_req or pkt.aps_frametype == 2 \
-            or pkt.aps_frametype == 0)
+                         or pkt.aps_frametype == 0)
         ),
         # Source endpoint (0/1 octets)
         ConditionalField(
             ByteField("src_endpoint", 10),
             lambda pkt: (pkt.frame_control.ack_req or pkt.aps_frametype == 2 \
-            or pkt.aps_frametype == 0)
+                         or pkt.aps_frametype == 0)
         ),
         # APS counter (1 octet)
         ByteField("counter", 0),
@@ -160,7 +164,8 @@ class ZigbeeAppDataPayload2(Packet):
         # 3 frame types: data, APS command, and acknowledgement
         # ConditionalField(StrField("data", ""), lambda pkt:pkt.aps_frametype == 0),  # noqa: E501
     ]
-    
+
+
 class XStrField2(StrField):
     """
     StrField which value is printed as hexadecimal.
@@ -170,6 +175,7 @@ class XStrField2(StrField):
         if x is None:
             return repr(x)
         return hex_bytes(x).hex()
+
 
 class ZigbeeSecurityHeader2(Packet):
     name = "Zigbee Security Header"
@@ -198,7 +204,8 @@ class ZigbeeSecurityHeader2(Packet):
         # Frame counter (4 octets)
         XLEIntField("fc", 0),  # provide frame freshness and prevent duplicate frames  # noqa: E501
         # Source address (0/8 octets)
-        ConditionalField(dot15d4AddressField("source", 0, adjust=lambda pkt, x: 8), lambda pkt: pkt.extended_nonce),  # noqa: E501
+        ConditionalField(dot15d4AddressField("source", 0, adjust=lambda pkt, x: 8), lambda pkt: pkt.extended_nonce),
+        # noqa: E501
         # Key sequence number (0/1 octet): only present when key identifier is 1 (network key)  # noqa: E501
         ConditionalField(ByteField("key_seqnum", 0), lambda pkt: pkt.getfieldval("key_type") == 1),  # noqa: E501
         # Payload
@@ -215,4 +222,3 @@ class ZigbeeSecurityHeader2(Packet):
             _data, _mic = self.data[:-mic_length], self.data[-mic_length:]
             self.data, self.mic = _data, _mic
         return s
-
