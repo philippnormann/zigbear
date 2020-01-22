@@ -22,6 +22,11 @@ class Device:
         print("Answer: {}".format(answer))
         session.close()
 
+    def initiate_contact(self, destination: int):
+        session = self.protocol_stack.connect(destination, 100)
+        session.send_initiation_packet()
+        session.close()
+
     def start_lamp(self):
         lamp = Lamp(self.protocol_stack)
         lamp.wait_for_input()

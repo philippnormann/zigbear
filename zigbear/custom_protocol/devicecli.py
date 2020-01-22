@@ -15,6 +15,13 @@ class DeviceCli(Cmd):
         except Exception as e:
             print(e)
 
+    def do_initiate(self, arg: str):
+        try:
+            dest_addr = int(arg)
+            self.device.initiate_contact(dest_addr)
+        except ValueError:
+            print('invalid destination address')
+
     def do_lamp(self, arg):
         self.device.start_lamp()
 

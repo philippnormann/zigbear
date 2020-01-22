@@ -34,76 +34,91 @@ class SecurityLayer:
             result = True
         return result
 
+    def set_source_framecount(self, source, framecount):
+        self.framecount_cache[source] = framecount
+
     def set_receive_callback(self, callback):
         self.receive_callback = callback
 
     def enable_pairing_mode(self):
         self.network_key = None
 
-    def receive(self, source, port, data):
+    def make_security_packet(self, data):
         try:
             sec = ZigbearSecurityLayer(data)
         except:
             sec = None
+        return sec
+
+    def receive(self, source, port, data):
+        sec = self.make_security_packet(data)
         if sec:
-            secdata = sec.data
-            message_type = sec.message_type
-            packet_framecount = sec.fc
             applayer_data = None
-            if self.check_framecount(source, packet_framecount):
-                if message_type == 0:
-                    applayer_data = secdata
-                elif message_type == 1:
-                    if source not in self.key_cache or "public_key" not in self.key_cache[source]:
-                        self.generate_public_key(source)
-                    peer_public_key = self.deserialize_public_key(secdata)
-                    self.key_cache[source]["peer_public_key"] = peer_public_key
-                    self.generate_derived_keys(source, peer_public_key, b"test")
-                    if sec.flags & 1 and not self.network_key:
-                        self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
-                elif message_type == 2 and not self.network_key:
-                    error, network_key = self.decryption(packet_framecount, secdata, sec.mac, source, True)
-                    if not error:
-                        self.network_key = network_key
-                        self.key_cache.pop(source, None)
-                        self.framecount_cache[source] = packet_framecount
+            if self.check_framecount(source, sec.fc):
+                if sec.message_type == 0:
+                    applayer_data = sec.data
+                elif sec.message_type == 1:
+                    self.handle_pairing_request(source, port, sec.data, sec.flags & 1)
+                elif sec.message_type == 2 and not self.network_key:
+                    self.handle_network_key(source, sec.fc, sec.data, sec.mac)
                 else:
-                    error, applayer_data = self.decryption(packet_framecount, secdata, sec.mac, source)
-                    if not error:
-                        self.framecount_cache[source] = packet_framecount
-                        print("received: " + str(applayer_data))
+                    applayer_data = self.handle_encrypted_data(source, sec.fc, sec.data, sec.mac)
                 if applayer_data:
                     self.receive_callback(source, port, applayer_data)
 
+    def handle_pairing_request(self, source, port, secdata, reply):
+        self.generate_public_key(source)
+        peer_public_key = self.deserialize_public_key(secdata)
+        self.key_cache[source]["peer_public_key"] = peer_public_key
+        self.generate_derived_keys(source, peer_public_key, b"test")
+        if reply:
+            self.send(source, port, self.serialize_public_key(self.key_cache[source]["public_key"]), 1, 0)
+
+    def handle_network_key(self, source, framecount, secdata, mac):
+        error, network_key = self.decryption(framecount, secdata, mac, source, True)
+        if not error:
+            self.network_key = network_key
+            self.key_cache.pop(source, None)
+            self.set_source_framecount(source, framecount)
+
+    def handle_encrypted_data(self, source, framecount, secdata, mac):
+        error, applayer_data = self.decryption(framecount, secdata, mac, source)
+        if not error:
+            self.set_source_framecount(source, framecount)
+            return applayer_data
+
     def send(self, destination, port, data, message_type=3, flags=0):
-        framecount = self.new_framecount()
-        packet = ZigbearSecurityLayer(flags=flags, message_type=message_type, fc=framecount)
-        packet_data = None
-        mac = None
+        packet = ZigbearSecurityLayer(flags=flags, message_type=message_type, fc=self.new_framecount())
+        packet_data = mac = None
         if message_type == 0:
-            packet_data = data
+            packet.data = data
         elif message_type == 1:
-            if destination not in self.key_cache or "public_key" not in self.key_cache[destination]:
-                self.generate_public_key(destination)
-            serialized_key = self.serialize_public_key(self.key_cache[destination]["public_key"])
-            packet_data = serialized_key
+            packet.data = self.handle_prepare_pk(destination)
         elif message_type == 2:
-            packet_data, mac = self.encryption(framecount, self.network_key, destination, True)
+            packet.data, packet.mac = self.handle_prepare_nwk(destination, packet.fc)
         else:
-            packet_data, mac = self.encryption(framecount, data.build(), destination)
-        packet.data = packet_data
-        if mac:
-            packet.mac = int.from_bytes(mac, 'big')
+            packet.data, packet.mac = self.handle_prepare_encdata(destination, packet.fc, data)
         self.networkLayer.send(destination, port, packet)
+
+    def handle_prepare_pk(self, destination):
+        self.generate_public_key(destination)
+        return self.serialize_public_key(self.key_cache[destination]["public_key"])
+
+    def handle_prepare_nwk(self, destination, framecount):
+        return self.encryption(framecount, self.network_key, destination, True)
+
+    def handle_prepare_encdata(self, destination, framecount, data):
+        return self.encryption(framecount, data.build(), destination)
 
     def get_connection_attempts(self):
         return list(self.key_cache.keys())
 
     def generate_public_key(self, source):
-        self.key_cache[source] = {}
-        new_private_key = ec.generate_private_key(ec.SECP224R1(), default_backend())
-        self.key_cache[source]["public_key"] = new_private_key.public_key()
-        self.key_cache[source]["private_key"] = new_private_key
+        if source not in self.key_cache or "public_key" not in self.key_cache[source]:
+            self.key_cache[source] = {}
+            new_private_key = ec.generate_private_key(ec.SECP224R1(), default_backend())
+            self.key_cache[source]["public_key"] = new_private_key.public_key()
+            self.key_cache[source]["private_key"] = new_private_key
 
     def serialize_public_key(self, public_key):
         return public_key.public_bytes(encoding=serialization.Encoding.DER,
@@ -121,7 +136,6 @@ class SecurityLayer:
                     backend=default_backend()
                     ).derive(shared_key)
 
-    # Nonce should be longer (maybe generate a random number)
     def get_nonce(self, framecount, destination):
         return framecount.to_bytes(4, byteorder='big')
 
@@ -130,7 +144,7 @@ class SecurityLayer:
         nonce = self.get_nonce(framecount, destination)
         aesgcm = AESGCM(key)
         sk_encrypted = aesgcm.encrypt(nonce, data, None)
-        return (sk_encrypted[:-16], sk_encrypted[-16:])
+        return (sk_encrypted[:-16], int.from_bytes(sk_encrypted[-16:], 'big'))
 
     def decryption(self, framecount, data, mac, source, shared=False):
         key = self.key_cache[source]["shared_encryption_key"] if shared else self.network_key
@@ -138,10 +152,9 @@ class SecurityLayer:
             self.key_cache.pop(source, None)
         nonce = self.get_nonce(framecount, source)
         aesgcm = AESGCM(key)
+        error = result = None
         try:
             result = aesgcm.decrypt(nonce, data + mac.to_bytes(16, 'big'), None)
-            error = None
         except:
-            result = None
             error = 1
         return (error, result)
