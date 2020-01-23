@@ -11,9 +11,9 @@ from zigbear.zigbee.zigbeeCli import ZigbeeCli
 
 
 class ZigbearCli(Cmd):
-    def __init__(self):
+    def __init__(self, connector):
         super().__init__()
-        self.connector = None
+        self.connector = connector
         self.prompt = "zigbear> "
         self.intro = "Welcome! Type ? to list commands"
 

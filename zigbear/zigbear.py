@@ -1,5 +1,5 @@
 from zigbear.cli import ZigbearCli
 
 
-def main():
-    ZigbearCli().cmdloop()
+def main(connector):
+    ZigbearCli(connector).cmdloop()

@@ -41,10 +41,10 @@ logger = logging.getLogger(__name__)
 
 class CC2531Connector(Connector):
 
-    def __init__(self):
+    def __init__(self, port='/dev/ttyACM0'):
         super().__init__()
         self.started = False
-        self.port = '/dev/ttyACM0'
+        self.port = port
         self.baud = 460800
         self.timeout = 0.1
         self.__sensniff_magic_legacy = bytearray((0x53, 0x6E, 0x69, 0x66))
