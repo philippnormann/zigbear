@@ -94,18 +94,17 @@ class NetworkLayer:
         self.MACLayer.send(h, source)
 
     def abort_retries(self, destination, port, package_id, sequence_number):
-        with self.send_lock:
-            if destination in self.packet_send_cache \
-                    and port in self.packet_send_cache[destination] \
-                    and package_id in self.packet_send_cache[destination][port] \
-                    and sequence_number in self.packet_send_cache[destination][port][package_id]:
-                self.packet_send_cache[destination][port][package_id].pop(sequence_number)
-                if not self.packet_send_cache[destination][port][package_id]:
-                    self.packet_send_cache[destination][port].pop(package_id)
-                    if not self.packet_send_cache[destination][port]:
-                        self.packet_send_cache[destination].pop(port)
-                        if not self.packet_send_cache[destination]:
-                            self.packet_send_cache.pop(destination)
+        if destination in self.packet_send_cache \
+                and port in self.packet_send_cache[destination] \
+                and package_id in self.packet_send_cache[destination][port] \
+                and sequence_number in self.packet_send_cache[destination][port][package_id]:
+            self.packet_send_cache[destination][port][package_id].pop(sequence_number)
+            if not self.packet_send_cache[destination][port][package_id]:
+                self.packet_send_cache[destination][port].pop(package_id)
+                if not self.packet_send_cache[destination][port]:
+                    self.packet_send_cache[destination].pop(port)
+                    if not self.packet_send_cache[destination]:
+                        self.packet_send_cache.pop(destination)
 
     # TODO Maybe seperated thread with queue for handling package, to avoid overflow of serial connection
     # TODO Maybe set timestamp of first package and clear cache after time
@@ -116,7 +115,8 @@ class NetworkLayer:
             return  # TODO log error in debug level
 
         if h.frame_control.ack:
-            self.abort_retries(source, h.port, h.package_id, h.sequence_number)
+            with self.send_lock:
+                self.abort_retries(source, h.port, h.package_id, h.sequence_number)
         else:
             if source not in self.packet_receive_cache:
                 self.packet_receive_cache[source] = {}
