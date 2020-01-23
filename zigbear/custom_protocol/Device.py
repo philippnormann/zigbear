@@ -38,18 +38,4 @@ Address: {address}
 Count Session: {session_count}
 Count Listeners: {listeners_count}
 Network key: {networkkey}
-Private key: {privatekey}
-Public key: {publickey}
                 """.format(**self.protocol_stack.status()).strip())
-
-    def find_network(self):
-        pass  # TODO
-
-    def join_network(self, panid):
-        pass  # TODO
-
-    def start(self):
-        pass  # TODO
-
-    def close(self):
-        pass  # TODO

@@ -27,11 +27,8 @@ class ProtocolStack:
     def get_networkkey(self):
         return self.securitylayer.network_key
 
-    def get_privatekey(self):
-        return ""  # TODO
-
-    def get_publickey(self):
-        return ""  # TODO
+    def set_network_key(self, networkkey):
+        self.securitylayer.network_key = networkkey
 
     def get_session_count(self):
         count = 0
@@ -58,8 +55,6 @@ class ProtocolStack:
             "panid": self.get_panid(),
             "address": self.get_address(),
             "networkkey": self.get_networkkey(),
-            "privatekey": self.get_privatekey(),
-            "publickey": self.get_publickey(),
             "session_count": self.get_session_count(),
             "listeners_count": self.get_listeners_count()
         }

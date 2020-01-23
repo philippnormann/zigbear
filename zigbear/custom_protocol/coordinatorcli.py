@@ -15,9 +15,11 @@ class CoordinatorCli(Cmd):
     def do_info(self, _):
         self.coordinator.print_info()
 
-    def do_accept(self, _):
+    def do_start(self, _):
         self.coordinator.start_server()
-        pass  # TODO accept a new device with name and public key
+
+    def do_stop(self, _):
+        self.coordinator.stop_server()
 
     def do_toggle(self, arg: str):
         '''brightness <dest_addr>: toggle lamp'''
@@ -30,6 +32,8 @@ class CoordinatorCli(Cmd):
     def do_brightness(self, arg: str):
         '''brightness <dest_addr> <brightness (0-255)>: set lamp to specific brightness'''
         args = arg.split()
+        brightness = None
+        dest_addr = None
         try:
             dest_addr = int(args[0])
         except:
@@ -38,10 +42,11 @@ class CoordinatorCli(Cmd):
             brightness = int(args[1])
         except:
             print('invalid brightness value')
-        if 0 <= brightness <= 255:
-            self.coordinator.set_lamp_brightness(dest_addr, brightness)
-        else:
-            print('brightness value must be between 0 and 255')
+        if brightness is not None and dest_addr is not None:
+            if 0 <= brightness <= 255:
+                self.coordinator.set_lamp_brightness(dest_addr, brightness)
+            else:
+                print('brightness value must be between 0 and 255')
 
     def do_initiate(self, arg: str):
         try:

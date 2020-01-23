@@ -10,17 +10,27 @@ class Coordinator:
     def __init__(self, connector):
         self.protocol_stack = ProtocolStack(connector, b"network_keynetwork_keynetwork_ke")
         self.protocol_stack.set_address(1)
+        self.server = None
 
     def start_server(self):
-        def handler(session):
-            data = session.receive()
-            print("Message from {} with data {}".format(session.other, data))
-            session.send(Raw("Length: {}".format(len(data))))
-            session.close()
+        if self.server is not None:
+            print("Server already running.")
+        else:
+            def handler(session):
+                data = session.receive()
+                print("Message from {} with data {}".format(session.other, data))
+                session.send(Raw("Length: {}".format(len(data))))
+                session.close()
 
-        listener = self.protocol_stack.listen(100, handler)
-        time.sleep(100000)
-        listener.close()
+            self.server = self.protocol_stack.listen(100, handler)
+
+    def stop_server(self):
+        if self.server is None:
+            print("Currenty no server is running")
+        else:
+            self.server.close()
+            self.server = None
+
 
     def toggle_lamp(self, destination: int):
         session = self.protocol_stack.connect(destination, 100)
@@ -55,7 +65,7 @@ class Coordinator:
         self.protocol_stack.set_address(address)
 
     def set_network_key(self, networkkey):
-        pass  # TODO
+        self.protocol_stack.set_network_key(networkkey)
 
     def list_devices(self):
         pass  # TODO
@@ -72,6 +82,4 @@ Address: {address}
 Count Session: {session_count}
 Count Listeners: {listeners_count}
 Network key: {networkkey}
-Private key: {privatekey}
-Public key: {publickey}
                 """.format(**self.protocol_stack.status()).strip())

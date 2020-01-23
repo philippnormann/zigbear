@@ -108,7 +108,6 @@ class NetworkLayer:
                             self.packet_send_cache.pop(destination)
 
     # TODO Maybe seperated thread with queue for handling package, to avoid overflow of serial connection
-    # TODO Maybe send ack package after receive package
     # TODO Maybe set timestamp of first package and clear cache after time
     def receive(self, source, data):
         try:
