@@ -3,7 +3,6 @@ import logging
 import logging.config
 
 from zigbear.radio.cc2531connector import CC2531Connector
-from zigbear.radio.mockconnector import MockConnector
 from zigbear.radio.nrfconnector import NrfConnector
 from zigbear.radio.raspbeeconnector import RaspbeeConnector
 from zigbear.radio.socketconnector import SocketConnector
@@ -12,7 +11,7 @@ from zigbear.zigbear import main
 
 def arg_parser():
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
-    connector_choices = ('nrf', 'cc2531', 'raspbee')
+    connector_choices = ('nrf', 'cc2531', 'raspbee', 'socket')
 
     parser = argparse.ArgumentParser(add_help=True, description='Zigbear...')
 
@@ -35,7 +34,7 @@ def arg_parser():
 
     zigbear_group = parser.add_argument_group('Zigbear')
     zigbear_group.add_argument('-c', '--connector', action='store',
-                               choices=connector_choices, required=True,
+                               choices=connector_choices,
                                default=False,
                                help='Configure a Connector')
 
@@ -45,15 +44,24 @@ def arg_parser():
                                       (Default: %s)' % ('/dev/ttyACM0',))
 
     zigbear_group.add_argument('-C', '--channel', action='store',
-                               default='25',
+                               default=25,
                                help='The Radio Channel for listening and sending \
-                                          (Default: %s)' % ('25',))
+                                          (Default: %d)' % (25,))
 
     zigbear_group.add_argument('-w', '--wireshark-host', action='store',
                                default='127.0.0.1',
                                help='The wireshark host \
                                               (Default: %s)' % ('127.0.0.1',))
 
+    zigbear_group.add_argument('-r', '--receive-port', action='store',
+                               default=8080,
+                               help='The receive port for the socket connector \
+                                              (Default: %d)' % (8080,))
+
+    zigbear_group.add_argument('-t', '--target-port', action='store',
+                               default=9090,
+                               help='The target port for the socket connector \
+                                              (Default: %d)' % (9090,))
     return parser.parse_args()
 
 
@@ -62,25 +70,28 @@ def log_init():
         logging.basicConfig(filename=args.log_file, format='%(asctime)s - %(levelname)8s - %(message)s',
                             level=args.log_level)
 
+
 def connector_init():
-    host = args.wireshark_host
     port = args.device
     connector_string = args.connector
-    print(connector_string)
-    print(host)
-    print(port)
-    if connector_string == "nrf":
+    if connector_string == 'nrf':
         return NrfConnector(port)
-    elif connector_string == "cc2531":
+    elif connector_string == 'cc2531':
         return CC2531Connector(port)
-    elif connector_string == "raspbee":
-        return RaspbeeConnector(port = port, wireshark_host=host )
+    elif connector_string == 'raspbee':
+        host = args.wireshark_host
+        return RaspbeeConnector(port=port, wireshark_host=host)
+    elif connector_string == 'socket':
+        receive_port = args.receive_port
+        target_port = args.target_port
+        return SocketConnector(receive_port=receive_port, target_port=target_port)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     args = arg_parser()
-
     log_init()
-
-    connector = connector_init()
-    connector.set_channel(args.channel)
+    connector = None
+    if args.connector:
+        connector = connector_init()
+        connector.set_channel(args.channel)
     main(connector)
