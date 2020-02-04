@@ -16,7 +16,7 @@ To remotely flash the firmware of a RaspBee module, execute
 ```bash
 $ make remote-install-firmware
 ```
-On the host, `docker` is required for compilation of µracoli.
+On the host, `docker` is required for compilation of [µracoli](http://uracoli.nongnu.org/).
 
 On the RaspberryPi, `GCFFlasher_internal` is required (included in the installation of [deCONZ](https://www.phoscon.de/en/raspbee/install#raspbian)).
 
