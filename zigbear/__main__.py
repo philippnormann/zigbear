@@ -13,55 +13,54 @@ def arg_parser():
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
     connector_choices = ('nrf', 'cc2531', 'raspbee', 'socket')
 
-    parser = argparse.ArgumentParser(add_help=True, description='Zigbear...')
+    parser = argparse.ArgumentParser(add_help=True, description='ZigBear CLI')
 
     log_group = parser.add_argument_group('Logging')
     log_group.add_argument('-L', '--log-file', action='store', nargs='?',
                            const='zigbear.log', default=False,
-                           help='Log output in LOG_FILE. If -L is specified \
-                                       but LOG_FILE is omitted, %s will be used. \
-                                       If the argument is omitted altogether, \
-                                       logging will not take place at all.'
+                           help='Log output to LOG_FILE. If -L is specified \
+                                 but LOG_FILE is omitted, "%s" will be used. \
+                                 If the argument is omitted altogether, \
+                                 logging will not take place at all.'
                                 % ('zigbear.log',))
 
     log_group.add_argument('-l', '--log-level', action='store',
                            choices=debug_choices,
                            default='INFO',
                            help='Log messages of severity LOG_LEVEL or \
-                                       higher. Only makes sense if -L is also \
-                                       specified (Default %s)'
-                                % ('INFO',))
+                                 higher. Only makes sense if -L is also specified  \
+                                 (Default: %s)' % ('INFO',))
 
-    zigbear_group = parser.add_argument_group('Zigbear')
+    zigbear_group = parser.add_argument_group('ZigBear')
     zigbear_group.add_argument('-c', '--connector', action='store',
                                choices=connector_choices,
                                default=False,
-                               help='Configure a Connector')
+                               help='configure connector type')
 
     zigbear_group.add_argument('-d', '--device', action='store',
                                default='/dev/ttyACM0',
-                               help='Read/Send from device DEVICE \
-                                      (Default: %s)' % ('/dev/ttyACM0',))
+                               help='transceive from DEVICE \
+                                     (Default: %s)' % ('/dev/ttyACM0',))
 
     zigbear_group.add_argument('-C', '--channel', action='store',
                                default=25,
-                               help='The Radio Channel for listening and sending \
-                                          (Default: %d)' % (25,))
+                               help='radio channel for listening and sending \
+                                     (Default: %d)' % (25,))
 
     zigbear_group.add_argument('-w', '--wireshark-host', action='store',
                                default='127.0.0.1',
-                               help='The wireshark host \
-                                              (Default: %s)' % ('127.0.0.1',))
+                               help='wireshark host \
+                                     (Default: %s)' % ('127.0.0.1',))
 
     zigbear_group.add_argument('-r', '--receive-port', action='store',
                                default=8080,
-                               help='The receive port for the socket connector \
-                                              (Default: %d)' % (8080,))
+                               help='receive port for the socket connector \
+                                     (Default: %d)' % (8080,))
 
     zigbear_group.add_argument('-t', '--target-port', action='store',
                                default=9090,
-                               help='The target port for the socket connector \
-                                              (Default: %d)' % (9090,))
+                               help='target port for the socket connector \
+                                     (Default: %d)' % (9090,))
     return parser.parse_args()
 
 
